@@ -3,6 +3,12 @@ import { FaUserCircle } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 const Navbar = () => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  // Example: Format username to look more like a real name
+  const displayName = user.username
+    ? user.username.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : "";
+
   return (
     <nav className="w-full bg-blue-900 text-white px-6 py-3 flex items-center justify-between shadow mx-0">
       <Link
@@ -21,7 +27,10 @@ const Navbar = () => {
         <Link to="/admin/orders" className="hover:text-blue-300 transition">
           Orders
         </Link>
-        <FaUserCircle className="text-2xl" title="Admin Profile" />
+        <div className="flex items-center gap-2">
+          <FaUserCircle className="text-2xl" title="Admin Profile" />
+          {displayName && <span className="font-semibold">{displayName}</span>}
+        </div>
       </div>
     </nav>
   );

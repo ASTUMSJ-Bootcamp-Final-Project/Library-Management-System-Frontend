@@ -12,7 +12,10 @@ const PrivateRoute = ({ children, role }) => {
   if (!isAuthenticated()) {
     return <Navigate to="/" replace />;
   }
-  if (role && user.role !== role) {
+  if (role === "admin" && !user.isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+  if (role === "student" && user.isAdmin) {
     return <Navigate to="/" replace />;
   }
   return children;
