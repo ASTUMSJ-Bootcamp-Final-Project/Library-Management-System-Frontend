@@ -9,7 +9,7 @@ const Navbar = () => {
         to="/admin"
         className="font-bold text-xl tracking-wide hover:text-blue-300 transition"
       >
-        ASTUMSJ Admin
+        ASTUMSJ ADMIN
       </Link>
       <div className="flex items-center gap-6">
         <Link to="/admin/books" className="hover:text-blue-300 transition">

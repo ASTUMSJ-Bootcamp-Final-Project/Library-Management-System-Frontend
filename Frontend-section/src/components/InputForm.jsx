@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "./ui/button";
 import { Link, useNavigate } from "react-router-dom";
+import { MdEmail, MdLock } from "react-icons/md";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import students from "@/demo/studentsData";
 
 const InputForm = () => {
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -36,14 +39,20 @@ const InputForm = () => {
           >
             Email
           </label>
-          <input
-            className="border border-blue-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            type="email"
-            name="email"
-            id="email"
-            required
-            autoComplete="username"
-          />
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-400">
+              <MdEmail size={20} />
+            </span>
+            <input
+              className="border border-blue-300 rounded-md px-4 py-2 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              type="email"
+              name="email"
+              id="email"
+              required
+              autoComplete="username"
+              placeholder="librarian@library.com"
+            />
+          </div>
         </div>
         <div>
           <label
@@ -52,14 +61,28 @@ const InputForm = () => {
           >
             Password
           </label>
-          <input
-            className="border border-blue-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            type="password"
-            name="password"
-            id="password"
-            required
-            autoComplete="current-password"
-          />
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-400">
+              <MdLock size={20} />
+            </span>
+            <input
+              className="border border-blue-300 rounded-md px-4 py-2 w-full pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              type={showPassword ? "text" : "password"}
+              name="password"
+              id="password"
+              required
+              autoComplete="current-password"
+              placeholder="Enter your password"
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-400"
+              onClick={() => setShowPassword((prev) => !prev)}
+              tabIndex={-1}
+            >
+              {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
+            </button>
+          </div>
         </div>
         <Button
           type="submit"
