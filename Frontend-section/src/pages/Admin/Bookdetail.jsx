@@ -38,6 +38,7 @@ const Bookdetail = () => {
 
   const handleUpdate = (e) => {
     e.preventDefault();
+
     // Implement update logic here (API or state update)
     alert("Book updated successfully!");
     // Optionally, navigate or refresh

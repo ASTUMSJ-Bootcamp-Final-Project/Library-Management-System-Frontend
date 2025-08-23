@@ -11,9 +11,17 @@ const SignUpForm = () => {
     const name = e.target.name.value.trim();
     const email = e.target.email.value.trim();
     const password = e.target.password.value.trim();
+    const code = e.target.code.value.trim();
 
     if (!name || !email || !password) {
       setError("All fields are required.");
+      return;
+    }
+    if (!code) {
+      const role = "student";
+    }
+    if (!/^\d{6}$/.test(code)) {
+      setError("Admin code must be a 6-digit number.");
       return;
     }
     // You can add further validation or API call here
@@ -23,13 +31,10 @@ const SignUpForm = () => {
   };
 
   return (
-    <div className="w-full max-w-md bg-white bg-opacity-80 rounded-xl shadow-xl p-8 backdrop-blur-md">
+    <div className="w-full max-w-xl text-white bg-opacity-80 rounded-xl shadow-xl p-8 backdrop-blur-md">
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <div>
-          <label
-            className="block text-blue-900 font-semibold mb-2"
-            htmlFor="name"
-          >
+          <label className="block text-white font-semibold mb-2" htmlFor="name">
             Name
           </label>
           <input
@@ -37,13 +42,14 @@ const SignUpForm = () => {
             type="text"
             name="name"
             id="name"
+            placeholder="Enter your full name"
             required
             autoComplete="name"
           />
         </div>
         <div>
           <label
-            className="block text-blue-900 font-semibold mb-2"
+            className="block text-white font-semibold mb-2"
             htmlFor="email"
           >
             Email
@@ -53,25 +59,47 @@ const SignUpForm = () => {
             type="email"
             name="email"
             id="email"
+            placeholder="Enter your email address"
             required
             autoComplete="username"
           />
         </div>
-        <div>
-          <label
-            className="block text-blue-900 font-semibold mb-2"
-            htmlFor="password"
-          >
-            Password
-          </label>
-          <input
-            className="border border-blue-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            type="password"
-            name="password"
-            id="password"
-            required
-            autoComplete="new-password"
-          />
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <label
+              className="block text-white font-semibold mb-2"
+              htmlFor="password"
+            >
+              Password
+            </label>
+            <input
+              className="border border-blue-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              type="password"
+              name="password"
+              id="password"
+              placeholder="Enter your password"
+              required
+              autoComplete="new-password"
+            />
+          </div>
+          <div className="flex-1">
+            <label
+              className="block text-white font-semibold mb-2"
+              htmlFor="code"
+            >
+              Admin 6-Digit Code
+            </label>
+            <input
+              className="border border-blue-300 rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              type="text"
+              name="code"
+              id="code"
+              required
+              maxLength={6}
+              pattern="\d{6}"
+              placeholder="Enter 6-digit admin code"
+            />
+          </div>
         </div>
         {error && (
           <div className="text-red-600 text-sm text-center">{error}</div>
@@ -82,9 +110,9 @@ const SignUpForm = () => {
         >
           Sign Up
         </Button>
-        <p className="text-center text-blue-900 mt-2">
+        <p className="text-center mt-2">
           Already have an account?{" "}
-          <Link to="/" className="text-blue-600 font-semibold hover:underline">
+          <Link to="/" className="text-green-500 font-semibold hover:underline">
             Login here
           </Link>
         </p>
@@ -92,5 +120,4 @@ const SignUpForm = () => {
     </div>
   );
 };
-
 export default SignUpForm;

@@ -18,6 +18,8 @@ const InputForm = () => {
     if (!user) {
       alert("Invalid email or password");
     } else {
+      // Save user info to localStorage
+      localStorage.setItem("user", JSON.stringify(user));
       if (user.role === "admin") {
         navigate("/admin");
       } else {
@@ -27,13 +29,10 @@ const InputForm = () => {
   };
 
   return (
-    <div className="w-full max-w-md bg-white bg-opacity-80 rounded-xl shadow-xl p-8 backdrop-blur-md">
+    <div className="w-full max-w-md text-white bg-opacity-80 rounded-xl shadow-xl p-8 backdrop-blur-md">
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <div>
-          <label
-            className="block text-blue-900 font-semibold mb-2"
-            htmlFor="email"
-          >
+          <label className="block font-semibold mb-2" htmlFor="email">
             Email
           </label>
           <input
@@ -41,15 +40,13 @@ const InputForm = () => {
             type="email"
             name="email"
             id="email"
+            placeholder="Enter your email address"
             required
             autoComplete="username"
           />
         </div>
         <div>
-          <label
-            className="block text-blue-900 font-semibold mb-2"
-            htmlFor="password"
-          >
+          <label className="block font-semibold mb-2" htmlFor="password">
             Password
           </label>
           <input
@@ -57,6 +54,7 @@ const InputForm = () => {
             type="password"
             name="password"
             id="password"
+            placeholder="Enter your password"
             required
             autoComplete="current-password"
           />
@@ -67,11 +65,11 @@ const InputForm = () => {
         >
           Login
         </Button>
-        <p className="text-center text-blue-900 mt-2">
+        <p className="text-center mt-2">
           Don't have an account?{" "}
           <Link
             to="/signup"
-            className="text-blue-600 font-semibold hover:underline"
+            className="text-green-500 font-semibold hover:underline"
           >
             Register here
           </Link>

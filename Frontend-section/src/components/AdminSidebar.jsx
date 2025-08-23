@@ -7,8 +7,9 @@ import {
   FaBars,
   FaPlusSquare,
   FaReceipt,
+  FaSignOutAlt,
 } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const menuItems = [
   { name: "Dashboard", icon: <FaTachometerAlt />, link: "/admin" },
@@ -21,10 +22,16 @@ const menuItems = [
 
 const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/");
+  };
 
   return (
     <aside
-      className={` h-screen sticky top-0 bg-blue-900 text-white transition-all duration-200 z-50
+      className={`h-screen sticky top-0 bg-blue-900 text-white transition-all duration-200 z-50
         ${collapsed ? "w-16" : "w-56"}
         flex flex-col`}
     >
@@ -54,6 +61,15 @@ const AdminSidebar = () => {
           ))}
         </ul>
       </nav>
+      <div className="mt-auto mb-4">
+        <button
+          onClick={handleLogout}
+          className="w-fit flex px-4 gap-2 hover:bg-red-400 text-white py-2 rounded transition"
+        >
+          <FaSignOutAlt className="text-xl" />
+          {!collapsed && <span className="font-semibold">Logout</span>}
+        </button>
+      </div>
     </aside>
   );
 };
