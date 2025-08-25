@@ -1,14 +1,16 @@
 import React from "react";
 import Login from "./pages/Auth/Login";
 import { Route, Router, Routes } from "react-router-dom";
-import AdminDashboard from "./pages/Admin/AdminDashboard";
-import StudentDashboard from "./pages/Student/StudentDashboard";
+import AdminDashboard from "./pages/Admin/AdminDashboardModern";
+import StudentDashboard from "./pages/Student/StudentDashboardEnhanced";
 import SignUp from "./pages/Auth/SignUp";
 import ManageUsers from "./pages/Admin/ManageUsers";
 import AddBook from "./pages/Admin/AddBook";
 import Orders from "./pages/Admin/Orders";
-import ManageBook from "./pages/Admin/ManageBook";
+import ManageBook from "./pages/Admin/ManageBookModern";
 import Bookdetail from "./pages/Admin/Bookdetail";
+import StudentBookDetail from "./pages/Student/BookDetail";
+import BrowseBooks from "./pages/Student/BrowseBooks";
 import PrivateRoute from "@/routes/PrivateRoute";
 
 const App = () => {
@@ -74,6 +76,22 @@ const App = () => {
           element={
             <PrivateRoute role="student">
               <StudentDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/student/book/:id"
+          element={
+            <PrivateRoute role="student">
+              <StudentBookDetail />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/student/browse-books"
+          element={
+            <PrivateRoute role="student">
+              <BrowseBooks />
             </PrivateRoute>
           }
         />

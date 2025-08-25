@@ -1,13 +1,12 @@
 import React from "react";
 import SignUpForm from "@/components/SignUpForm";
-
+import booksBg from "../../assets/lib11.jpg";
 const SignUp = () => {
   return (
     <div
       className="flex items-center justify-center min-h-screen relative"
       style={{
-        backgroundImage:
-          "url('https://github.com/ASTUMSJ-Bootcamp-Final-Project/Library-Management-System-Frontend/blob/abdu/Frontend-section/src/assets/lib11.jpg?raw=true')",
+        backgroundImage: `url(${booksBg})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}

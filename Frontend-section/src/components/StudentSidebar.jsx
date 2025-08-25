@@ -2,28 +2,24 @@ import React, { useState } from "react";
 import {
   FaTachometerAlt,
   FaBook,
-  FaUsers,
-  FaCog,
+  FaUser,
+  FaSignOutAlt,
   FaBars,
   FaTimes,
-  FaPlusSquare,
-  FaReceipt,
-  FaSignOutAlt,
+  FaHistory,
 } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const menuItems = [
-  { name: "Dashboard", icon: <FaTachometerAlt />, link: "/admin" },
-  { name: "Books", icon: <FaBook />, link: "/admin/books" },
-  { name: "Add Book", icon: <FaPlusSquare />, link: "/admin/add-book" },
-  { name: "Orders", icon: <FaReceipt />, link: "/admin/orders" },
-  { name: "Users", icon: <FaUsers />, link: "/admin/users" },
-  // { name: "Settings", icon: <FaCog />, link: "/admin/settings" },
+  { name: "Dashboard", icon: <FaTachometerAlt />, link: "/student" },
+  { name: "Browse Books", icon: <FaBook />, link: "/student/browse-books" },
+  //   { name: "My Books", icon: <FaHistory />, link: "/student/my-books" },
+  { name: "Profile", icon: <FaUser />, link: "/student/profile" },
 ];
 
-const AdminSidebar = () => {
+const StudentSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -70,7 +66,7 @@ const AdminSidebar = () => {
               isDark ? "text-white" : "text-gray-900"
             }`}
           >
-            ASTUMSJ Library
+            ASTUMSJ LIBRARY
           </span>
         )}
       </div>
@@ -131,4 +127,4 @@ const AdminSidebar = () => {
   );
 };
 
-export default AdminSidebar;
+export default StudentSidebar;

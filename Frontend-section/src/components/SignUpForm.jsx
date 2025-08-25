@@ -4,45 +4,63 @@ import { Link, useNavigate } from "react-router-dom";
 import { MdEmail, MdLock, MdPerson } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import logo from "../assets/logo.jpg"; // Adjust path as needed
-
+import axios from "axios";
 const SignUpForm = () => {
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const firstName = e.target.firstName.value.trim();
-    const lastName = e.target.lastName.value.trim();
-    const email = e.target.email.value.trim();
-    const password = e.target.password.value.trim();
-    const confirmPassword = e.target.confirmPassword.value.trim();
-    const adminCode = e.target.adminCode.value.trim();
-    const terms = e.target.terms.checked;
+    const formData = new FormData(e.target);
+    const firstName = formData.get("firstName")?.trim();
+    const lastName = formData.get("lastName")?.trim();
+    const email = formData.get("email")?.trim();
+    const password = formData.get("password")?.trim();
+    const confirmPassword = formData.get("confirmPassword")?.trim();
+    const adminCode = formData.get("adminCode")?.trim();
+    const terms = formData.get("terms") === "on";
 
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      setError("All fields are required.");
-      return;
+      return setError("All fields are required.");
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
+      return setError("Passwords do not match.");
     }
     if (adminCode && !/^\d{6}$/.test(adminCode)) {
-      setError("Admin code must be a valid 6-digit number.");
-      return;
+      return setError("Admin code must be a valid 6-digit number.");
     }
     if (!terms) {
-      setError("You must agree to the terms.");
-      return;
+      return setError("You must agree to the terms.");
     }
 
-    setError("");
-    // Assign role based on admin code
-    const role = adminCode ? "admin" : "user";
-    alert(`Account created as ${role}! You can now log in.`);
-    navigate("/");
+    setError(""); // Clear previous errors
+
+    const username = `${firstName} ${lastName}`;
+    const payload = {
+      username,
+      email,
+      password,
+      ...(adminCode && { adminCode }), // Only include if provided
+    };
+
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/api/users/register",
+        payload
+      );
+      console.log("Signup success:", response.data);
+
+      alert("Account created successfully! You can now log in.");
+      e.target.reset();
+      navigate("/");
+    } catch (err) {
+      console.error("Signup error:", err);
+      setError(
+        err.response?.data?.message || "Signup failed. Please try again."
+      );
+    }
   };
 
   return (
@@ -74,7 +92,7 @@ const SignUpForm = () => {
                 <MdPerson size={20} />
               </span>
               <input
-                className="border border-blue-300 rounded-md px-4 py-2 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="border text-black border-blue-300 rounded-md px-4 py-2 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 type="text"
                 name="firstName"
                 id="firstName"
@@ -96,7 +114,7 @@ const SignUpForm = () => {
                 <MdPerson size={20} />
               </span>
               <input
-                className="border border-blue-300 rounded-md px-4 py-2 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="border text-black border-blue-300 rounded-md px-4 py-2 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 type="text"
                 name="lastName"
                 id="lastName"
@@ -119,7 +137,7 @@ const SignUpForm = () => {
               <MdEmail size={20} />
             </span>
             <input
-              className="border border-blue-300 rounded-md px-4 py-2 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="border text-black border-blue-300 rounded-md px-4 py-2 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               type="email"
               name="email"
               id="email"
@@ -141,7 +159,7 @@ const SignUpForm = () => {
               <MdLock size={20} />
             </span>
             <input
-              className="border border-blue-300 rounded-md px-4 py-2 w-full pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="border text-black border-blue-300 rounded-md px-4 py-2 w-full pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               type={showPassword ? "text" : "password"}
               name="password"
               id="password"
@@ -175,7 +193,7 @@ const SignUpForm = () => {
               <MdLock size={20} />
             </span>
             <input
-              className="border border-blue-300 rounded-md px-4 py-2 w-full pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="border text-black border-blue-300 rounded-md px-4 py-2 w-full pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               type={showConfirm ? "text" : "password"}
               name="confirmPassword"
               id="confirmPassword"
@@ -210,7 +228,7 @@ const SignUpForm = () => {
               <MdLock size={20} />
             </span>
             <input
-              className="border border-blue-300 rounded-md px-4 py-2 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="border text-black border-blue-300 rounded-md px-4 py-2 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               type="password"
               name="adminCode"
               id="adminCode"

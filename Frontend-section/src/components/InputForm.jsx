@@ -3,7 +3,6 @@ import { Button } from "./ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { MdEmail, MdLock } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import students from "@/demo/studentsData";
 
 const API_URL = "http://localhost:3000/api/users/login";
 
