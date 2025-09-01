@@ -1,23 +1,29 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 
-// Example: I used the localstorage to get the auth info
+// Check if user is authenticated
 const isAuthenticated = () => {
-  // we will replace with our real backend and auth logic
-  return !!localStorage.getItem("user"); // this returns true if user is logged in and false otherwise
+  const token = localStorage.getItem("token");
+  const user = localStorage.getItem("user");
+  return !!(token && user);
 };
 
 const PrivateRoute = ({ children, role }) => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
+  
   if (!isAuthenticated()) {
     return <Navigate to="/" replace />;
   }
-  if (role === "admin" && !user.isAdmin) {
+  
+  // Check role-based access
+  if (role === "admin" && !["admin", "super_admin"].includes(user.role)) {
     return <Navigate to="/" replace />;
   }
-  if (role === "student" && user.isAdmin) {
+  
+  if (role === "student" && user.role !== "user") {
     return <Navigate to="/" replace />;
   }
+  
   return children;
 };
 

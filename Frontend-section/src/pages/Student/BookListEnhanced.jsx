@@ -1,15 +1,48 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
-import books from "@/demo/Bookdata";
 import StudentBookCard from "@/components/StudentBookCard";
-import { FaSearch, FaFilter, FaSort } from "react-icons/fa";
+import { FaSearch, FaFilter, FaSort, FaExclamationTriangle } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { booksAPI, borrowAPI, utils } from "@/services/api";
 
 const BookListEnhanced = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("title");
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [borrowingStatus, setBorrowingStatus] = useState(null);
+  const [actionLoading, setActionLoading] = useState({});
   const { isDark } = useTheme();
+
+  useEffect(() => {
+    fetchBooks();
+    fetchBorrowingStatus();
+  }, []);
+
+  const fetchBooks = async () => {
+    try {
+      setLoading(true);
+      const response = await booksAPI.getAllBooks();
+      setBooks(response.data);
+      setError(null);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to fetch books');
+      console.error('Error fetching books:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchBorrowingStatus = async () => {
+    try {
+      const response = await borrowAPI.getUserBorrowingStatus();
+      setBorrowingStatus(response.data);
+    } catch (err) {
+      console.error('Error fetching borrowing status:', err);
+    }
+  };
 
   // Filter and sort books
   const filteredBooks = useMemo(() => {
@@ -20,7 +53,7 @@ const BookListEnhanced = () => {
     );
 
     if (statusFilter !== "all") {
-      filtered = filtered.filter((book) => book.status === statusFilter);
+      filtered = filtered.filter((book) => book.availableCopies > 0);
     }
 
     // Sort books
@@ -37,8 +70,8 @@ const BookListEnhanced = () => {
           bValue = b.author.toLowerCase();
           break;
         case "available":
-          aValue = a.totalAmount - a.borrowed;
-          bValue = b.totalAmount - b.borrowed;
+          aValue = a.availableCopies;
+          bValue = b.availableCopies;
           break;
         default:
           aValue = a.title.toLowerCase();
@@ -49,12 +82,45 @@ const BookListEnhanced = () => {
     });
 
     return filtered;
-  }, [search, statusFilter, sortBy]);
+  }, [search, statusFilter, sortBy, books]);
 
-  const handleBorrowBook = (bookId) => {
-    // Mock borrow functionality
-    alert(`Book ${bookId} borrowed successfully!`);
+  const handleBorrowBook = async (bookId) => {
+    try {
+      setActionLoading(prev => ({ ...prev, [bookId]: true }));
+      await borrowAPI.requestBorrow(bookId);
+      await fetchBorrowingStatus(); // Refresh borrowing status
+      alert('Book reserved successfully! Please collect it within 24 hours.');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to reserve book');
+      console.error('Error borrowing book:', err);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [bookId]: false }));
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <FaExclamationTriangle className="text-4xl text-red-500 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-red-600 mb-2">Error</h3>
+        <p className="text-gray-600">{error}</p>
+        <button
+          onClick={fetchBooks}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -69,6 +135,11 @@ const BookListEnhanced = () => {
         </h2>
         <p className={isDark ? "text-gray-300" : "text-gray-600"}>
           Browse our collection of {books.length} books
+          {borrowingStatus && (
+            <span className="ml-2 text-sm">
+              • You can borrow {borrowingStatus.booksRemaining} more books
+            </span>
+          )}
         </p>
       </div>
 
@@ -137,9 +208,14 @@ const BookListEnhanced = () => {
         {filteredBooks.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredBooks.map((book) => (
-              <Link to={`/student/book/${book.id}`} key={book.id}>
-                <StudentBookCard book={book} onBorrow={handleBorrowBook} />
-              </Link>
+              <StudentBookCard 
+                key={book._id} 
+                book={book} 
+                onBorrow={handleBorrowBook}
+                actionLoading={actionLoading[book._id]}
+                canBorrow={borrowingStatus?.booksRemaining > 0 && book.availableCopies > 0}
+                borrowingStatus={borrowingStatus}
+              />
             ))}
           </div>
         ) : (

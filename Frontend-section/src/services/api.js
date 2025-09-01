@@ -1,0 +1,252 @@
+import axios from 'axios';
+
+// Base URL for the backend API
+const API_BASE_URL = 'http://localhost:4000/api';
+
+// Create axios instance with default config
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add token to requests if available
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Handle response errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Auth API
+export const authAPI = {
+  login: (credentials) => api.post('/users/login', credentials),
+  register: (userData) => api.post('/users/register', userData),
+  getProfile: () => api.get('/users/profile'),
+};
+
+// Books API
+export const booksAPI = {
+  // Get all books
+  getAllBooks: () => api.get('/books'),
+  
+  // Get book by ID
+  getBookById: (id) => api.get(`/books/${id}`),
+  
+  // Add new book (Admin only)
+  addBook: (bookData) => {
+    const formData = new FormData();
+    
+    // Add text fields
+    Object.keys(bookData).forEach(key => {
+      if (key !== 'coverImage' && bookData[key] !== null && bookData[key] !== undefined) {
+        formData.append(key, bookData[key]);
+      }
+    });
+    
+    // Add image if provided
+    if (bookData.coverImage) {
+      formData.append('coverImage', bookData.coverImage);
+    }
+    
+    return api.post('/books', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  
+  // Update book (Admin only)
+  updateBook: (id, bookData) => {
+    const formData = new FormData();
+    
+    // Add text fields
+    Object.keys(bookData).forEach(key => {
+      if (key !== 'coverImage' && bookData[key] !== null && bookData[key] !== undefined) {
+        formData.append(key, bookData[key]);
+      }
+    });
+    
+    // Add image if provided
+    if (bookData.coverImage) {
+      formData.append('coverImage', bookData.coverImage);
+    }
+    
+    return api.put(`/books/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  
+  // Delete book (Admin only)
+  deleteBook: (id) => api.delete(`/books/${id}`),
+};
+
+// Borrow API
+export const borrowAPI = {
+  // Request to borrow a book (creates reservation)
+  requestBorrow: (bookId) => api.post('/borrow/request', { bookId }),
+  
+  // Return a book
+  returnBook: (borrowId) => api.post('/borrow/return', { borrowId }),
+  
+  // Get user's borrowing status
+  getUserBorrowingStatus: () => api.get('/borrow/status'),
+  
+  // Get all borrows (Admin only)
+  getAllBorrows: () => api.get('/borrow'),
+  
+  // Get pending reservations (Admin only)
+  getPendingReservations: () => api.get('/borrow/pending'),
+  
+  // Confirm book collection (Admin only)
+  confirmCollection: (borrowId, days = 14) => 
+    api.post('/borrow/confirm', { borrowId, days }),
+  
+  // Cancel expired reservations (Admin only)
+  cancelExpiredReservations: () => api.post('/borrow/cancel-expired'),
+};
+
+// Users API (Admin only)
+export const usersAPI = {
+  getAllUsers: () => api.get('/users'),
+  getUserById: (id) => api.get(`/users/${id}`),
+  updateUser: (id, userData) => api.put(`/users/${id}`, userData),
+  deleteUser: (id) => api.delete(`/users/${id}`),
+  approveMembership: (id) => api.put(`/users/${id}/approve`),
+  suspendMembership: (id) => api.put(`/users/${id}/suspend`),
+};
+
+// Reminder API (Admin only)
+export const reminderAPI = {
+  getStatus: () => api.get('/reminders/status'),
+  triggerDueDateReminders: () => api.post('/reminders/trigger/due-date'),
+  triggerOverdueNotifications: () => api.post('/reminders/trigger/overdue'),
+  triggerExpiredReservationCleanup: () => api.post('/reminders/trigger/cleanup'),
+  startScheduler: () => api.post('/reminders/start'),
+  stopScheduler: () => api.post('/reminders/stop'),
+};
+
+// Utility functions
+export const utils = {
+  // Format date for display
+  formatDate: (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  },
+  
+  // Format date and time for display
+  formatDateTime: (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  },
+  
+  // Get days remaining until due date
+  getDaysRemaining: (dueDate) => {
+    const today = new Date();
+    const due = new Date(dueDate);
+    const diffTime = due - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  },
+  
+  // Check if book is overdue
+  isOverdue: (dueDate) => {
+    const today = new Date();
+    const due = new Date(dueDate);
+    return due < today;
+  },
+  
+  // Get book cover image URL
+  getBookCoverUrl: (book) => {
+    if (book.coverImage?.url) {
+      return book.coverImage.url;
+    } else if (book.coverImage?.responsiveUrls?.medium) {
+      return book.coverImage.responsiveUrls.medium;
+    } else if (book.legacyCoverImage) {
+      return `${API_BASE_URL.replace('/api', '')}/uploads/${book.legacyCoverImage}`;
+    }
+    return '/src/assets/lib11.jpg'; // Default image
+  },
+  
+  // Get responsive image URL
+  getResponsiveImageUrl: (book, size = 'medium') => {
+    if (book.coverImage?.responsiveUrls?.[size]) {
+      return book.coverImage.responsiveUrls[size];
+    } else if (book.coverImage?.url) {
+      return book.coverImage.url;
+    } else if (book.legacyCoverImage) {
+      return `${API_BASE_URL.replace('/api', '')}/uploads/${book.legacyCoverImage}`;
+    }
+    return '/src/assets/lib11.jpg'; // Default image
+  },
+  
+  // Get status color for borrow status
+  getStatusColor: (status) => {
+    switch (status) {
+      case 'reserved':
+        return 'bg-blue-100 text-blue-800';
+      case 'borrowed':
+        return 'bg-green-100 text-green-800';
+      case 'returned':
+        return 'bg-gray-100 text-gray-800';
+      case 'overdue':
+        return 'bg-red-100 text-red-800';
+      case 'expired':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  },
+  
+  // Get status text for borrow status
+  getStatusText: (status) => {
+    switch (status) {
+      case 'reserved':
+        return 'Reserved';
+      case 'borrowed':
+        return 'Borrowed';
+      case 'returned':
+        return 'Returned';
+      case 'overdue':
+        return 'Overdue';
+      case 'expired':
+        return 'Expired';
+      default:
+        return 'Unknown';
+    }
+  },
+};
+
+export default api;

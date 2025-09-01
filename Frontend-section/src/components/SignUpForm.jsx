@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { MdEmail, MdLock, MdPerson } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import logo from "../assets/logo.jpg"; // Adjust path as needed
-import axios from "axios";
+import { authAPI } from "@/services/api";
 const SignUpForm = () => {
   const navigate = useNavigate();
   const [error, setError] = useState("");
@@ -42,14 +42,10 @@ const SignUpForm = () => {
       username,
       email,
       password,
-      ...(adminCode && { adminCode }), // Only include if provided
     };
 
     try {
-      const response = await axios.post(
-        "http://localhost:3000/api/users/register",
-        payload
-      );
+      const response = await authAPI.register(payload);
       console.log("Signup success:", response.data);
 
       alert("Account created successfully! You can now log in.");

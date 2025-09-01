@@ -13,21 +13,24 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { FaImage, FaTimes, FaUpload } from "react-icons/fa";
+import { booksAPI } from "@/services/api";
 
 const AddBook = () => {
   const { isDark } = useTheme();
   const [formData, setFormData] = useState({
     title: "",
     author: "",
-    genre: "",
+    category: "",
     description: "",
     isbn: "",
-    publishedYear: "",
-    publisher: "",
+    publicationYear: "",
     totalCopies: "",
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [coverImage, setCoverImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -44,17 +47,44 @@ const AddBook = () => {
     }
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setErrors(prev => ({ ...prev, coverImage: 'Please select a valid image file' }));
+        return;
+      }
+      
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors(prev => ({ ...prev, coverImage: 'Image size must be less than 5MB' }));
+        return;
+      }
+
+      setCoverImage(file);
+      setImagePreview(URL.createObjectURL(file));
+      setErrors(prev => ({ ...prev, coverImage: '' }));
+    }
+  };
+
+  const removeImage = () => {
+    setCoverImage(null);
+    setImagePreview(null);
+    setErrors(prev => ({ ...prev, coverImage: '' }));
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
     if (!formData.title.trim()) newErrors.title = "Title is required";
     if (!formData.author.trim()) newErrors.author = "Author is required";
-    if (!formData.genre.trim()) newErrors.genre = "Genre is required";
+    if (!formData.category.trim()) newErrors.category = "Category is required";
     if (!formData.description.trim())
       newErrors.description = "Description is required";
     if (!formData.isbn.trim()) newErrors.isbn = "ISBN is required";
-    if (!formData.publishedYear)
-      newErrors.publishedYear = "Published year is required";
+    if (!formData.publicationYear)
+      newErrors.publicationYear = "Publication year is required";
     if (!formData.totalCopies || formData.totalCopies < 1)
       newErrors.totalCopies = "Must have at least 1 copy";
 
@@ -70,26 +100,31 @@ const AddBook = () => {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      console.log("Submitting book data:", formData);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const bookData = {
+        ...formData,
+        coverImage: coverImage,
+        availableCopies: formData.totalCopies, // Initially all copies are available
+      };
+
+      await booksAPI.addBook(bookData);
 
       // Reset form on success
       setFormData({
         title: "",
         author: "",
-        genre: "",
+        category: "",
         description: "",
         isbn: "",
-        publishedYear: "",
-        publisher: "",
+        publicationYear: "",
         totalCopies: "",
       });
+      setCoverImage(null);
+      setImagePreview(null);
 
       alert("Book added successfully!");
     } catch (error) {
       console.error("Error adding book:", error);
-      alert("Failed to add book. Please try again.");
+      alert(error.response?.data?.message || "Failed to add book. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -173,26 +208,26 @@ const AddBook = () => {
                     )}
                   </div>
 
-                  {/* Genre */}
+                  {/* Category */}
                   <div className="space-y-2">
                     <Label
-                      htmlFor="genre"
+                      htmlFor="category"
                       className={isDark ? "text-white" : ""}
                     >
-                      Genre *
+                      Category *
                     </Label>
                     <Input
-                      id="genre"
-                      name="genre"
-                      value={formData.genre}
+                      id="category"
+                      name="category"
+                      value={formData.category}
                       onChange={handleInputChange}
                       placeholder="e.g., Fiction, Science, History"
                       className={
                         isDark ? "bg-gray-700 border-gray-600 text-white" : ""
                       }
                     />
-                    {errors.genre && (
-                      <p className="text-red-500 text-sm">{errors.genre}</p>
+                    {errors.category && (
+                      <p className="text-red-500 text-sm">{errors.category}</p>
                     )}
                   </div>
 
@@ -219,19 +254,19 @@ const AddBook = () => {
                     )}
                   </div>
 
-                  {/* Published Year */}
+                  {/* Publication Year */}
                   <div className="space-y-2">
                     <Label
-                      htmlFor="publishedYear"
+                      htmlFor="publicationYear"
                       className={isDark ? "text-white" : ""}
                     >
-                      Published Year *
+                      Publication Year *
                     </Label>
                     <Input
-                      id="publishedYear"
-                      name="publishedYear"
+                      id="publicationYear"
+                      name="publicationYear"
                       type="number"
-                      value={formData.publishedYear}
+                      value={formData.publicationYear}
                       onChange={handleInputChange}
                       placeholder="e.g., 2023"
                       min="1000"
@@ -240,9 +275,9 @@ const AddBook = () => {
                         isDark ? "bg-gray-700 border-gray-600 text-white" : ""
                       }
                     />
-                    {errors.publishedYear && (
+                    {errors.publicationYear && (
                       <p className="text-red-500 text-sm">
-                        {errors.publishedYear}
+                        {errors.publicationYear}
                       </p>
                     )}
                   </div>
@@ -274,25 +309,59 @@ const AddBook = () => {
                     )}
                   </div>
 
-                  {/* Publisher */}
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="publisher"
-                      className={isDark ? "text-white" : ""}
-                    >
-                      Publisher
-                    </Label>
-                    <Input
-                      id="publisher"
-                      name="publisher"
-                      value={formData.publisher}
-                      onChange={handleInputChange}
-                      placeholder="Enter publisher name"
-                      className={
-                        isDark ? "bg-gray-700 border-gray-600 text-white" : ""
-                      }
-                    />
-                  </div>
+                </div>
+
+                {/* Cover Image Upload */}
+                <div className="space-y-2">
+                  <Label className={isDark ? "text-white" : ""}>
+                    Cover Image
+                  </Label>
+                  
+                  {!imagePreview ? (
+                    <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+                      <FaImage className="mx-auto text-4xl text-gray-400 mb-4" />
+                      <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"} mb-4`}>
+                        Upload a book cover image (JPG, PNG, GIF - Max 5MB)
+                      </p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                        id="coverImage"
+                      />
+                      <label
+                        htmlFor="coverImage"
+                        className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md cursor-pointer ${
+                          isDark
+                            ? "bg-blue-600 hover:bg-blue-700 text-white"
+                            : "bg-blue-500 hover:bg-blue-600 text-white"
+                        }`}
+                      >
+                        <FaUpload className="mr-2" />
+                        Choose Image
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="Cover preview"
+                        className="w-full h-64 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2"
+                      >
+                        <FaTimes />
+                      </button>
+                    </div>
+                  )}
+                  
+                  {errors.coverImage && (
+                    <p className="text-red-500 text-sm">{errors.coverImage}</p>
+                  )}
                 </div>
 
                 {/* Description */}
@@ -333,18 +402,19 @@ const AddBook = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() =>
+                    onClick={() => {
                       setFormData({
                         title: "",
                         author: "",
-                        genre: "",
+                        category: "",
                         description: "",
                         isbn: "",
-                        publishedYear: "",
-                        publisher: "",
+                        publicationYear: "",
                         totalCopies: "",
-                      })
-                    }
+                      });
+                      setCoverImage(null);
+                      setImagePreview(null);
+                    }}
                     className={
                       isDark
                         ? "border-gray-600 text-white hover:bg-gray-700"

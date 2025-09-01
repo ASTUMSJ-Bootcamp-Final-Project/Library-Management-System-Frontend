@@ -3,8 +3,7 @@ import { Button } from "./ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { MdEmail, MdLock } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-
-const API_URL = "http://localhost:3000/api/users/login";
+import { authAPI } from "@/services/api";
 
 const InputForm = () => {
   const navigate = useNavigate();
@@ -17,29 +16,21 @@ const InputForm = () => {
     const password = e.target.password.value;
 
     try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Login failed");
-        return;
-      }
+      const response = await authAPI.login({ email, password });
+      const data = response.data;
 
       // Save token and user info
-      localStorage.setItem("token", data.accessToken);
+      localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      if (data.user.isAdmin) {
+      // Navigate based on role
+      if (data.user.role === "admin" || data.user.role === "super_admin") {
         navigate("/admin");
       } else {
         navigate("/student");
       }
     } catch (err) {
-      setError("Network error");
+      setError(err.response?.data?.message || "Login failed. Please try again.");
     }
   };
 
@@ -102,6 +93,11 @@ const InputForm = () => {
             </button>
           </div>
         </div>
+        {error && (
+          <div className="text-red-600 text-sm text-center bg-red-50 p-2 rounded">
+            {error}
+          </div>
+        )}
         <Button
           type="submit"
           className="bg-blue-600 text-white py-2 px-4 rounded-md font-bold hover:bg-blue-700 transition"

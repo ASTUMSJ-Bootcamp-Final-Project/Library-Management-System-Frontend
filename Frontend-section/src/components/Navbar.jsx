@@ -6,8 +6,9 @@ import {
   FaBook,
   FaUsers,
   FaClipboardList,
+  FaSignOutAlt,
 } from "react-icons/fa";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -16,6 +17,13 @@ const Navbar = () => {
   const { isDark } = useTheme();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
+  };
 
   const displayName = user.username
     ? user.username.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
@@ -125,6 +133,17 @@ const Navbar = () => {
                   {displayName}
                 </span>
               )}
+              <button
+                onClick={handleLogout}
+                className={`p-2 rounded-lg transition-colors ${
+                  isDark
+                    ? "text-gray-400 hover:text-white hover:bg-gray-800"
+                    : "text-gray-600 hover:text-red-600 hover:bg-gray-100"
+                }`}
+                title="Logout"
+              >
+                <FaSignOutAlt className="text-lg" />
+              </button>
             </div>
 
             {/* Mobile menu button */}

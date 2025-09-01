@@ -1,63 +1,75 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { FaBook, FaCalendarAlt, FaClock, FaUndo } from "react-icons/fa";
+import { FaBook, FaCalendarAlt, FaClock, FaUndo, FaExclamationTriangle, FaCheckCircle } from "react-icons/fa";
+import { borrowAPI, utils } from "@/services/api";
 
 const MyBooksEnhanced = () => {
   const { isDark } = useTheme();
+  const [borrowingStatus, setBorrowingStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [actionLoading, setActionLoading] = useState({});
 
-  // Mock borrowed books data
-  const borrowedBooks = [
-    {
-      id: 1,
-      title: "The Great Gatsby",
-      author: "F. Scott Fitzgerald",
-      image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400",
-      borrowDate: "2024-01-15",
-      dueDate: "2024-02-15",
-      status: "Borrowed",
-      daysRemaining: 15,
-    },
-    {
-      id: 2,
-      title: "To Kill a Mockingbird",
-      author: "Harper Lee",
-      image:
-        "https://images.unsplash.com/photo-1541963463532-d68292c34b19?w=400",
-      borrowDate: "2024-01-20",
-      dueDate: "2024-02-20",
-      status: "Borrowed",
-      daysRemaining: 10,
-    },
-    {
-      id: 3,
-      title: "1984",
-      author: "George Orwell",
-      image:
-        "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400",
-      borrowDate: "2024-01-25",
-      dueDate: "2024-02-25",
-      status: "Borrowed",
-      daysRemaining: 5,
-    },
+  useEffect(() => {
+    fetchBorrowingStatus();
+  }, []);
+
+  const fetchBorrowingStatus = async () => {
+    try {
+      setLoading(true);
+      const response = await borrowAPI.getUserBorrowingStatus();
+      setBorrowingStatus(response.data);
+      setError(null);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to fetch borrowing status');
+      console.error('Error fetching borrowing status:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReturnBook = async (borrowId) => {
+    try {
+      setActionLoading(prev => ({ ...prev, [borrowId]: true }));
+      await borrowAPI.returnBook(borrowId);
+      await fetchBorrowingStatus(); // Refresh data
+      alert('Book returned successfully!');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to return book');
+      console.error('Error returning book:', err);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [borrowId]: false }));
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <FaExclamationTriangle className="text-4xl text-red-500 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-red-600 mb-2">Error</h3>
+        <p className="text-gray-600">{error}</p>
+        <button
+          onClick={fetchBorrowingStatus}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  const allBooks = [
+    ...(borrowingStatus?.activeBorrows || []),
+    ...(borrowingStatus?.activeReservations || [])
   ];
-
-  const handleReturnBook = (bookId) => {
-    // Mock return functionality
-    alert(`Book ${bookId} returned successfully!`);
-  };
-
-  const handleRenewBook = (bookId) => {
-    // Mock renew functionality
-    alert(`Book ${bookId} renewed successfully!`);
-  };
-
-  const getStatusColor = (daysRemaining) => {
-    if (daysRemaining <= 3)
-      return "text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-200";
-    if (daysRemaining <= 7)
-      return "text-yellow-600 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-200";
-    return "text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-200";
-  };
 
   return (
     <div>
@@ -68,121 +80,225 @@ const MyBooksEnhanced = () => {
             isDark ? "text-white" : "text-gray-900"
           } mb-2`}
         >
-          My Borrowed Books
+          My Books
         </h2>
         <p className={isDark ? "text-gray-300" : "text-gray-600"}>
-          You have {borrowedBooks.length} books currently borrowed
+          {borrowingStatus?.totalBorrowed || 0} borrowed, {borrowingStatus?.totalReserved || 0} reserved
         </p>
       </div>
 
+      {/* Borrowing Status Summary */}
+      {borrowingStatus && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-blue-50"} border-l-4 border-blue-500`}>
+            <div className="flex items-center">
+              <FaBook className={`text-2xl ${isDark ? "text-blue-400" : "text-blue-600"} mr-3`} />
+              <div>
+                <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-blue-900"}`}>
+                  {borrowingStatus.totalBorrowed}
+                </div>
+                <div className={`text-sm ${isDark ? "text-gray-300" : "text-blue-700"}`}>
+                  Borrowed
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-yellow-50"} border-l-4 border-yellow-500`}>
+            <div className="flex items-center">
+              <FaClock className={`text-2xl ${isDark ? "text-yellow-400" : "text-yellow-600"} mr-3`} />
+              <div>
+                <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-yellow-900"}`}>
+                  {borrowingStatus.totalReserved}
+                </div>
+                <div className={`text-sm ${isDark ? "text-gray-300" : "text-yellow-700"}`}>
+                  Reserved
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-red-50"} border-l-4 border-red-500`}>
+            <div className="flex items-center">
+              <FaExclamationTriangle className={`text-2xl ${isDark ? "text-red-400" : "text-red-600"} mr-3`} />
+              <div>
+                <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-red-900"}`}>
+                  {borrowingStatus.overdueBooks}
+                </div>
+                <div className={`text-sm ${isDark ? "text-gray-300" : "text-red-700"}`}>
+                  Overdue
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-green-50"} border-l-4 border-green-500`}>
+            <div className="flex items-center">
+              <FaCheckCircle className={`text-2xl ${isDark ? "text-green-400" : "text-green-600"} mr-3`} />
+              <div>
+                <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-green-900"}`}>
+                  {borrowingStatus.booksRemaining}
+                </div>
+                <div className={`text-sm ${isDark ? "text-gray-300" : "text-green-700"}`}>
+                  Can Borrow
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Books List */}
       <div className="space-y-4">
-        {borrowedBooks.length > 0 ? (
-          borrowedBooks.map((book) => (
-            <div
-              key={book.id}
-              className={`rounded-lg p-4 ${
-                isDark ? "bg-gray-700" : "bg-white"
-              } shadow-md border-l-4 ${
-                book.daysRemaining <= 3
-                  ? "border-red-500"
-                  : book.daysRemaining <= 7
-                  ? "border-yellow-500"
-                  : "border-green-500"
-              }`}
-            >
-              <div className="flex items-start space-x-4">
-                {/* Book Cover */}
-                <img
-                  src={book.image}
-                  alt={book.title}
-                  className="w-16 h-24 object-cover rounded-lg shadow-md"
-                />
+        {allBooks.length > 0 ? (
+          allBooks.map((borrow) => {
+            const book = borrow.book;
+            const daysRemaining = borrow.dueDate ? utils.getDaysRemaining(borrow.dueDate) : null;
+            const isOverdue = borrow.dueDate ? utils.isOverdue(borrow.dueDate) : false;
+            
+            return (
+              <div
+                key={borrow._id}
+                className={`rounded-lg p-4 ${
+                  isDark ? "bg-gray-700" : "bg-white"
+                } shadow-md border-l-4 ${
+                  borrow.status === 'overdue' || isOverdue
+                    ? "border-red-500"
+                    : borrow.status === 'reserved'
+                    ? "border-yellow-500"
+                    : daysRemaining && daysRemaining <= 3
+                    ? "border-orange-500"
+                    : "border-green-500"
+                }`}
+              >
+                <div className="flex items-start space-x-4">
+                  {/* Book Cover */}
+                  <img
+                    src={utils.getBookCoverUrl(book)}
+                    alt={book.title}
+                    className="w-16 h-24 object-cover rounded-lg shadow-md"
+                  />
 
-                {/* Book Details */}
-                <div className="flex-1">
-                  <h3
-                    className={`text-lg font-semibold ${
-                      isDark ? "text-white" : "text-gray-900"
-                    } mb-1`}
-                  >
-                    {book.title}
-                  </h3>
-                  <p
-                    className={`text-sm ${
-                      isDark ? "text-gray-300" : "text-gray-600"
-                    } mb-2`}
-                  >
-                    by {book.author}
-                  </p>
-
-                  {/* Dates */}
-                  <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div className="flex items-center space-x-2">
-                      <FaCalendarAlt
-                        className={isDark ? "text-blue-400" : "text-blue-600"}
-                      />
-                      <span
-                        className={`text-sm ${
-                          isDark ? "text-gray-300" : "text-gray-600"
-                        }`}
-                      >
-                        Borrowed: {book.borrowDate}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <FaClock
-                        className={isDark ? "text-blue-400" : "text-blue-600"}
-                      />
-                      <span
-                        className={`text-sm ${
-                          isDark ? "text-gray-300" : "text-gray-600"
-                        }`}
-                      >
-                        Due: {book.dueDate}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Status and Actions */}
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                        book.daysRemaining
-                      )}`}
+                  {/* Book Details */}
+                  <div className="flex-1">
+                    <h3
+                      className={`text-lg font-semibold ${
+                        isDark ? "text-white" : "text-gray-900"
+                      } mb-1`}
                     >
-                      {book.daysRemaining} days remaining
-                    </span>
+                      {book.title}
+                    </h3>
+                    <p
+                      className={`text-sm ${
+                        isDark ? "text-gray-300" : "text-gray-600"
+                      } mb-2`}
+                    >
+                      by {book.author}
+                    </p>
 
+                    {/* Status Badge */}
+                    <div className="mb-3">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${utils.getStatusColor(borrow.status)}`}>
+                        {utils.getStatusText(borrow.status)}
+                      </span>
+                    </div>
+
+                    {/* Dates */}
+                    <div className="grid grid-cols-2 gap-4 mb-3">
+                      {borrow.borrowDate && (
+                        <div className="flex items-center space-x-2">
+                          <FaCalendarAlt
+                            className={isDark ? "text-blue-400" : "text-blue-600"}
+                          />
+                          <span
+                            className={`text-sm ${
+                              isDark ? "text-gray-300" : "text-gray-600"
+                            }`}
+                          >
+                            Borrowed: {utils.formatDate(borrow.borrowDate)}
+                          </span>
+                        </div>
+                      )}
+                      {borrow.dueDate && (
+                        <div className="flex items-center space-x-2">
+                          <FaClock
+                            className={isDark ? "text-blue-400" : "text-blue-600"}
+                          />
+                          <span
+                            className={`text-sm ${
+                              isDark ? "text-gray-300" : "text-gray-600"
+                            }`}
+                          >
+                            Due: {utils.formatDate(borrow.dueDate)}
+                          </span>
+                        </div>
+                      )}
+                      {borrow.reservationExpiry && (
+                        <div className="flex items-center space-x-2">
+                          <FaClock
+                            className={isDark ? "text-yellow-400" : "text-yellow-600"}
+                          />
+                          <span
+                            className={`text-sm ${
+                              isDark ? "text-gray-300" : "text-gray-600"
+                            }`}
+                          >
+                            Expires: {utils.formatDateTime(borrow.reservationExpiry)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Days Remaining or Overdue */}
+                    {daysRemaining !== null && (
+                      <div className="mb-3">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            isOverdue
+                              ? "text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-200"
+                              : daysRemaining <= 3
+                              ? "text-orange-600 bg-orange-100 dark:bg-orange-900 dark:text-orange-200"
+                              : "text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-200"
+                          }`}
+                        >
+                          {isOverdue 
+                            ? `${Math.abs(daysRemaining)} days overdue`
+                            : `${daysRemaining} days remaining`
+                          }
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Actions */}
                     <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleRenewBook(book.id)}
-                        className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                          isDark
-                            ? "bg-blue-600 hover:bg-blue-700 text-white"
-                            : "bg-blue-100 hover:bg-blue-200 text-blue-800"
-                        }`}
-                      >
-                        <FaClock className="inline mr-1" />
-                        Renew
-                      </button>
-                      <button
-                        onClick={() => handleReturnBook(book.id)}
-                        className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                          isDark
-                            ? "bg-green-600 hover:bg-green-700 text-white"
-                            : "bg-green-100 hover:bg-green-200 text-green-800"
-                        }`}
-                      >
-                        <FaUndo className="inline mr-1" />
-                        Return
-                      </button>
+                      {borrow.status === 'borrowed' && (
+                        <button
+                          onClick={() => handleReturnBook(borrow._id)}
+                          disabled={actionLoading[borrow._id]}
+                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                            actionLoading[borrow._id]
+                              ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                              : isDark
+                              ? "bg-green-600 hover:bg-green-700 text-white"
+                              : "bg-green-100 hover:bg-green-200 text-green-800"
+                          }`}
+                        >
+                          <FaUndo className="inline mr-1" />
+                          {actionLoading[borrow._id] ? "Returning..." : "Return"}
+                        </button>
+                      )}
+                      {borrow.status === 'reserved' && (
+                        <span className="px-3 py-1 rounded-lg text-sm font-medium bg-yellow-100 text-yellow-800">
+                          <FaClock className="inline mr-1" />
+                          Awaiting Collection
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <div
             className={`text-center py-12 rounded-lg ${
@@ -199,7 +315,7 @@ const MyBooksEnhanced = () => {
                 isDark ? "text-white" : "text-gray-900"
               }`}
             >
-              No books borrowed
+              No books borrowed or reserved
             </h3>
             <p className={isDark ? "text-gray-300" : "text-gray-600"}>
               Start browsing our collection to borrow some books!
@@ -207,61 +323,6 @@ const MyBooksEnhanced = () => {
           </div>
         )}
       </div>
-
-      {/* Statistics */}
-      {borrowedBooks.length > 0 && (
-        <div
-          className={`mt-6 p-4 rounded-lg ${
-            isDark ? "bg-gray-700" : "bg-blue-50"
-          } border-l-4 border-blue-500`}
-        >
-          <h4
-            className={`text-lg font-semibold mb-2 ${
-              isDark ? "text-white" : "text-blue-900"
-            }`}
-          >
-            Borrowing Summary
-          </h4>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <div
-                className={`text-2xl font-bold ${
-                  isDark ? "text-blue-400" : "text-blue-600"
-                }`}
-              >
-                {borrowedBooks.length}
-              </div>
-              <div className={isDark ? "text-gray-300" : "text-blue-800"}>
-                Total Books
-              </div>
-            </div>
-            <div className="text-center">
-              <div
-                className={`text-2xl font-bold ${
-                  isDark ? "text-green-400" : "text-green-600"
-                }`}
-              >
-                {borrowedBooks.filter((b) => b.daysRemaining > 3).length}
-              </div>
-              <div className={isDark ? "text-gray-300" : "text-green-800"}>
-                On Time
-              </div>
-            </div>
-            <div className="text-center">
-              <div
-                className={`text-2xl font-bold ${
-                  isDark ? "text-red-400" : "text-red-600"
-                }`}
-              >
-                {borrowedBooks.filter((b) => b.daysRemaining <= 3).length}
-              </div>
-              <div className={isDark ? "text-gray-300" : "text-red-800"}>
-                Due Soon
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

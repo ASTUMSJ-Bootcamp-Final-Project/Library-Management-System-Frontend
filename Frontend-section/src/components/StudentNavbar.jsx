@@ -1,11 +1,19 @@
 import React from "react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { FaUser, FaBell, FaSearch } from "react-icons/fa";
+import { FaUser, FaBell, FaSearch, FaSignOutAlt } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const StudentNavbar = () => {
   const { isDark } = useTheme();
+  const navigate = useNavigate();
   const data = localStorage.getItem("user");
   const student = JSON.parse(data);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
+  };
 
   // Mock student data
   const studentData = {
@@ -82,6 +90,17 @@ const StudentNavbar = () => {
                 {studentData.email}
               </p>
             </div>
+            <button
+              onClick={handleLogout}
+              className={`p-2 rounded-lg transition-colors ${
+                isDark
+                  ? "text-gray-400 hover:text-white hover:bg-gray-800"
+                  : "text-gray-600 hover:text-red-600 hover:bg-gray-100"
+              }`}
+              title="Logout"
+            >
+              <FaSignOutAlt className="text-lg" />
+            </button>
           </div>
         </div>
       </div>
