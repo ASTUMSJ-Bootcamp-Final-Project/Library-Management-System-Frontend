@@ -1,35 +1,45 @@
 import AdminSidebar from "@/components/AdminSidebar";
 import { useTheme } from "@/contexts/ThemeContext";
-import React, { useState } from "react";
-import books from "@/demo/Bookdata";
+import React, { useState, useEffect } from "react";
 import BookCard from "@/components/BookCard";
+import { booksAPI } from "@/services/api";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const ManageBook = () => {
   const [search, setSearch] = useState("");
+  const [books, setBooks] = useState([]);
   const { isDark } = useTheme();
 
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const response = await booksAPI.getAllBooks();
+        setBooks(response.data || []);
+      } catch (error) {
+        console.error('Error fetching books:', error);
+      }
+    };
+
+    fetchBooks();
+  }, []);
+
   // Filter books by title or author (case-insensitive)
-  const filteredBooks = books.filter(
+  const filteredBooks = books ? books.filter(
     (book) =>
       book.title.toLowerCase().includes(search.toLowerCase()) ||
       book.author.toLowerCase().includes(search.toLowerCase())
-  );
+  ) : [];
 
   return (
-    <div
-      className={`flex flex-row min-h-screen ${
-        isDark ? "bg-gray-900" : "bg-gray-100"
-      }`}
-    >
+    <div className={`flex flex-row min-h-screen ${isDark ? "bg-gray-900" : "bg-gray-100"}`}>
       <AdminSidebar />
       <main className="flex-1 px-6 py-3">
         <Navbar />
         <h1
           className={`text-3xl font-bold ${
             isDark ? "text-white" : "text-blue-600"
-          } mb-8`}
+          } mb-8 pt-6 md:pt-8`}
         >
           Manage Books
         </h1>
@@ -48,7 +58,7 @@ const ManageBook = () => {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {filteredBooks.length > 0 ? (
-            filteredBooks.map((book) => <BookCard key={book.id} book={book} />)
+            filteredBooks.map((book) => <BookCard key={book._id} book={book} />)
           ) : (
             <div
               className={`col-span-full text-center ${

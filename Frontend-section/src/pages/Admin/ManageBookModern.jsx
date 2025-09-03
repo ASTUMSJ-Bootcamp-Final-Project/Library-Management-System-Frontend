@@ -1,7 +1,7 @@
 import AdminSidebar from "@/components/AdminSidebar";
 import { useTheme } from "@/contexts/ThemeContext";
-import React, { useState, useMemo } from "react";
-import books from "@/demo/Bookdata";
+import React, { useState, useMemo, useEffect } from "react";
+import { booksAPI } from "@/services/api";
 import BookCardEnhanced from "@/components/BookCardEnhanced";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -16,22 +16,47 @@ import {
   FaClipboardList,
   FaSync,
 } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const ManageBookModern = () => {
   const [search, setSearch] = useState("");
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("title");
   const [sortOrder, setSortOrder] = useState("asc");
   const { isDark } = useTheme();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        setLoading(true);
+        const response = await booksAPI.getAllBooks();
+        setBooks(response.data || []);
+        setError(null);
+      } catch (err) {
+        setError(err.response?.data?.message || "Failed to fetch books");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBooks();
+  }, []);
 
   // Calculate statistics
   const stats = useMemo(() => {
     const totalBooks = books.length;
-    const availableBooks = books.filter(
-      (book) => book.status === "Available"
-    ).length;
-    const borrowedBooks = books.reduce((sum, book) => sum + book.borrowed, 0);
-    const totalCopies = books.reduce((sum, book) => sum + book.totalAmount, 0);
+    const availableBooks = books.reduce(
+      (sum, book) => sum + (Number(book.availableCopies) || 0),
+      0
+    );
+    const totalCopies = books.reduce(
+      (sum, book) => sum + (Number(book.totalCopies) || 0),
+      0
+    );
+    const borrowedBooks = totalCopies - availableBooks;
 
     return {
       totalBooks,
@@ -40,18 +65,24 @@ const ManageBookModern = () => {
       totalCopies,
       utilizationRate: ((borrowedBooks / totalCopies) * 100).toFixed(1),
     };
-  }, []);
+  }, [books]);
 
   // Filter and sort books
   const filteredBooks = useMemo(() => {
-    let filtered = books.filter(
-      (book) =>
-        book.title.toLowerCase().includes(search.toLowerCase()) ||
-        book.author.toLowerCase().includes(search.toLowerCase())
-    );
+    let filtered = books.filter((book) => {
+      const title = (book.title || "").toLowerCase();
+      const author = (book.author || "").toLowerCase();
+      return (
+        title.includes(search.toLowerCase()) ||
+        author.includes(search.toLowerCase())
+      );
+    });
 
     if (statusFilter !== "all") {
-      filtered = filtered.filter((book) => book.status === statusFilter);
+      filtered = filtered.filter((book) => {
+        const isAvailable = (Number(book.availableCopies) || 0) > 0;
+        return statusFilter === "Available" ? isAvailable : !isAvailable;
+      });
     }
 
     // Sort books
@@ -60,24 +91,24 @@ const ManageBookModern = () => {
 
       switch (sortBy) {
         case "title":
-          aValue = a.title.toLowerCase();
-          bValue = b.title.toLowerCase();
+          aValue = (a.title || "").toLowerCase();
+          bValue = (b.title || "").toLowerCase();
           break;
         case "author":
-          aValue = a.author.toLowerCase();
-          bValue = b.author.toLowerCase();
+          aValue = (a.author || "").toLowerCase();
+          bValue = (b.author || "").toLowerCase();
           break;
         case "available":
-          aValue = a.totalAmount - a.borrowed;
-          bValue = b.totalAmount - b.borrowed;
+          aValue = (Number(a.availableCopies) || 0);
+          bValue = (Number(b.availableCopies) || 0);
           break;
         case "borrowed":
-          aValue = a.borrowed;
-          bValue = b.borrowed;
+          aValue = (Number(a.totalCopies) || 0) - (Number(a.availableCopies) || 0);
+          bValue = (Number(b.totalCopies) || 0) - (Number(b.availableCopies) || 0);
           break;
         default:
-          aValue = a.title.toLowerCase();
-          bValue = b.title.toLowerCase();
+          aValue = (a.title || "").toLowerCase();
+          bValue = (b.title || "").toLowerCase();
       }
 
       if (sortOrder === "asc") {
@@ -88,21 +119,21 @@ const ManageBookModern = () => {
     });
 
     return filtered;
-  }, [search, statusFilter, sortBy, sortOrder]);
+  }, [books, search, statusFilter, sortBy, sortOrder]);
 
   const quickActions = [
     {
       title: "Add New Book",
       description: "Add a new book to the library",
       icon: <FaPlus className="text-2xl" />,
-      link: "/admin/add-book",
+      onClick: () => navigate("/admin/add-book"),
       color: "bg-blue-500 hover:bg-blue-600",
     },
     {
       title: "View Analytics",
       description: "Detailed book analytics and reports",
       icon: <FaChartBar className="text-2xl" />,
-      link: "/admin/analytics",
+      onClick: () => navigate("/admin/orders"),
       color: "bg-green-500 hover:bg-green-600",
     },
     {
@@ -125,7 +156,7 @@ const ManageBookModern = () => {
         <Navbar />
 
         {/* Header Section */}
-        <div className="mb-8">
+        <div className="mb-8 pt-6 md:pt-8">
           <h1
             className={`text-3xl md:text-4xl font-bold ${
               isDark ? "text-white" : "text-gray-900"
@@ -401,10 +432,14 @@ const ManageBookModern = () => {
             </h2>
           </div>
 
-          {filteredBooks.length > 0 ? (
+          {loading ? (
+            <div className={`text-center py-12 ${isDark ? "text-gray-300" : "text-gray-600"}`}>Loading books...</div>
+          ) : error ? (
+            <div className={`text-center py-12 ${isDark ? "text-red-300" : "text-red-600"}`}>{error}</div>
+          ) : filteredBooks.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredBooks.map((book) => (
-                <BookCardEnhanced key={book.id} book={book} />
+                <BookCardEnhanced key={book._id} book={book} />
               ))}
             </div>
           ) : (

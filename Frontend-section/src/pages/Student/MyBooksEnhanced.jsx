@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { FaBook, FaCalendarAlt, FaClock, FaUndo, FaExclamationTriangle, FaCheckCircle } from "react-icons/fa";
 import { borrowAPI, utils } from "@/services/api";
+import toast from "react-hot-toast";
 
 const MyBooksEnhanced = () => {
   const { isDark } = useTheme();
@@ -33,10 +34,10 @@ const MyBooksEnhanced = () => {
       setActionLoading(prev => ({ ...prev, [borrowId]: true }));
       await borrowAPI.returnBook(borrowId);
       await fetchBorrowingStatus(); // Refresh data
-      alert('Book returned successfully!');
+      toast.success('Return request submitted successfully! Please wait for admin confirmation.');
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to return book');
-      console.error('Error returning book:', err);
+      toast.error(err.response?.data?.message || 'Failed to submit return request');
+      console.error('Error submitting return request:', err);
     } finally {
       setActionLoading(prev => ({ ...prev, [borrowId]: false }));
     }
@@ -68,7 +69,8 @@ const MyBooksEnhanced = () => {
 
   const allBooks = [
     ...(borrowingStatus?.activeBorrows || []),
-    ...(borrowingStatus?.activeReservations || [])
+    ...(borrowingStatus?.activeReservations || []),
+    ...(borrowingStatus?.returnRequestedBooks || [])
   ];
 
   return (
@@ -83,13 +85,13 @@ const MyBooksEnhanced = () => {
           My Books
         </h2>
         <p className={isDark ? "text-gray-300" : "text-gray-600"}>
-          {borrowingStatus?.totalBorrowed || 0} borrowed, {borrowingStatus?.totalReserved || 0} reserved
+          {borrowingStatus?.totalBorrowed || 0} borrowed, {borrowingStatus?.totalReserved || 0} reserved, {borrowingStatus?.totalReturnRequested || 0} return requested
         </p>
       </div>
 
       {/* Borrowing Status Summary */}
       {borrowingStatus && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
           <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-blue-50"} border-l-4 border-blue-500`}>
             <div className="flex items-center">
               <FaBook className={`text-2xl ${isDark ? "text-blue-400" : "text-blue-600"} mr-3`} />
@@ -145,6 +147,20 @@ const MyBooksEnhanced = () => {
               </div>
             </div>
           </div>
+
+          <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-purple-50"} border-l-4 border-purple-500`}>
+            <div className="flex items-center">
+              <FaUndo className={`text-2xl ${isDark ? "text-purple-400" : "text-purple-600"} mr-3`} />
+              <div>
+                <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-purple-900"}`}>
+                  {borrowingStatus.totalReturnRequested || 0}
+                </div>
+                <div className={`text-sm ${isDark ? "text-gray-300" : "text-purple-700"}`}>
+                  Return Requested
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -166,6 +182,8 @@ const MyBooksEnhanced = () => {
                     ? "border-red-500"
                     : borrow.status === 'reserved'
                     ? "border-yellow-500"
+                    : borrow.status === 'return_requested'
+                    ? "border-purple-500"
                     : daysRemaining && daysRemaining <= 3
                     ? "border-orange-500"
                     : "border-green-500"
@@ -284,13 +302,19 @@ const MyBooksEnhanced = () => {
                           }`}
                         >
                           <FaUndo className="inline mr-1" />
-                          {actionLoading[borrow._id] ? "Returning..." : "Return"}
+                          {actionLoading[borrow._id] ? "Submitting..." : "Request Return"}
                         </button>
                       )}
                       {borrow.status === 'reserved' && (
                         <span className="px-3 py-1 rounded-lg text-sm font-medium bg-yellow-100 text-yellow-800">
                           <FaClock className="inline mr-1" />
                           Awaiting Collection
+                        </span>
+                      )}
+                      {borrow.status === 'return_requested' && (
+                        <span className="px-3 py-1 rounded-lg text-sm font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                          <FaClock className="inline mr-1" />
+                          Return Requested - Awaiting Admin Confirmation
                         </span>
                       )}
                     </div>

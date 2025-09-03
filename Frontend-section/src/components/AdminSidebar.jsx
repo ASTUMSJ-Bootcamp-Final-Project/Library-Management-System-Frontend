@@ -30,6 +30,7 @@ const AdminSidebar = () => {
   const { isDark } = useTheme();
 
   const handleLogout = () => {
+    localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/");
   };
@@ -38,7 +39,7 @@ const AdminSidebar = () => {
 
   return (
     <aside
-      className={`h-screen sticky top-0 transition-all duration-300 z-40 flex flex-col ${
+      className={`h-screen sticky top-0 transition-[width] duration-300 ease-in-out z-40 flex flex-col overflow-hidden ${
         isDark
           ? "bg-gray-900 border-r border-gray-700 text-white"
           : "bg-white border-r border-gray-200 text-gray-800"
@@ -99,9 +100,13 @@ const AdminSidebar = () => {
                 >
                   {item.icon}
                 </span>
-                {!collapsed && (
-                  <span className="ml-3 font-medium text-sm">{item.name}</span>
-                )}
+                <span
+                  className={`ml-3 font-medium text-sm transition-opacity duration-200 ${
+                    collapsed ? "opacity-0" : "opacity-100"
+                  }`}
+                >
+                  {item.name}
+                </span>
               </Link>
             </li>
           ))}

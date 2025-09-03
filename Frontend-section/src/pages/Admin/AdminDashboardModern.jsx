@@ -1,6 +1,7 @@
 import AdminSidebar from "@/components/AdminSidebar";
 import { useTheme } from "@/contexts/ThemeContext";
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardHeader,
@@ -38,74 +39,9 @@ import {
 } from "recharts";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import borrowingHistory from "@/demo/borrowingHistory";
-
-const stats = [
-  {
-    title: "Total Books",
-    value: "1,245",
-    icon: <FaBook className="text-blue-500" />,
-    description: "Books available in the library",
-    bgColor: "bg-gradient-to-br from-blue-500 to-blue-600",
-  },
-  {
-    title: "Active Users",
-    value: "312",
-    icon: <FaUsers className="text-green-500" />,
-    description: "Users currently registered",
-    bgColor: "bg-gradient-to-br from-green-500 to-green-600",
-  },
-  {
-    title: "Pending Orders",
-    value: "7",
-    icon: <FaClipboardList className="text-yellow-500" />,
-    description: "Orders awaiting approval",
-    bgColor: "bg-gradient-to-br from-yellow-500 to-yellow-600",
-  },
-  {
-    title: "Current Users",
-    value: "150",
-    icon: <FaUsers className="text-purple-500" />,
-    description: "Users currently online",
-    bgColor: "bg-gradient-to-br from-purple-500 to-purple-600",
-  },
-];
-
-const booksAddedData = [
-  { month: "Jan", books: 40 },
-  { month: "Feb", books: 55 },
-  { month: "Mar", books: 32 },
-  { month: "Apr", books: 60 },
-  { month: "May", books: 48 },
-  { month: "Jun", books: 70 },
-];
-
-const recentActivities = [
-  {
-    type: "Book Added",
-    detail: 'Book "React Mastery" added',
-    user: "Admin",
-    date: "2025-08-19",
-    status: "Completed",
-    icon: <FaPlusCircle className="text-green-500" />,
-  },
-  {
-    type: "Borrow",
-    detail: 'User "Jane Doe" borrowed "JS Essentials"',
-    user: "Jane Doe",
-    date: "2025-08-18",
-    status: "Borrowed",
-    icon: <FaClock className="text-yellow-500" />,
-  },
-  {
-    type: "Return",
-    detail: 'User "John Smith" returned "Python Basics"',
-    user: "John Smith",
-    date: "2025-08-17",
-    status: "Returned",
-    icon: <FaCheckCircle className="text-blue-500" />,
-  },
-];
+import { booksAPI, usersAPI, borrowAPI } from "@/services/api";
+import BorrowingHistory from "@/components/BorrowingHistory";
+// Live dashboard data
 
 const quickActions = [
   {
@@ -119,7 +55,7 @@ const quickActions = [
     title: "View Analytics",
     description: "Check detailed library analytics and reports",
     icon: <FaChartLine className="text-2xl" />,
-    link: "/admin/analytics",
+    link: "/admin/orders",
     color: "bg-green-500 hover:bg-green-600",
   },
   {
@@ -133,6 +69,140 @@ const quickActions = [
 
 const AdminDashboardModern = () => {
   const { isDark } = useTheme();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [books, setBooks] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [borrows, setBorrows] = useState([]);
+  const [recent, setRecent] = useState([]);
+
+  useEffect(() => {
+    const fetchAll = async () => {
+      setLoading(true);
+      let anySuccess = false;
+      try {
+        const booksRes = await booksAPI.getAllBooks();
+        setBooks(booksRes.data || []);
+        anySuccess = true;
+      } catch (_) {
+        // keep going; books not critical to render others
+      }
+
+      try {
+        const userJson = JSON.parse(localStorage.getItem("user") || "{}");
+        const isSuper = userJson.role === "super_admin";
+        const usersRes = isSuper
+          ? await usersAPI.getAllUsersSuperAdmin()
+          : await usersAPI.getAllUsersAdminView();
+        setUsers(usersRes.data || []);
+        anySuccess = true;
+      } catch (_) {
+        // ignore 403/401 and continue
+      }
+
+      try {
+        const borrowsRes = await borrowAPI.getAllBorrows();
+        setBorrows(borrowsRes.data || []);
+        const recentItems = (borrowsRes.data || [])
+          .slice(0, 6)
+          .map((b) => ({
+            id: b._id,
+            user: b.user?.name || b.user?.username || "Unknown",
+            book: b.book?.title || "Unknown",
+            status: b.status,
+            date: b.updatedAt || b.createdAt,
+          }));
+        setRecent(recentItems);
+        anySuccess = true;
+      } catch (e) {
+        // ignore and allow partial render
+      }
+
+      if (!anySuccess) {
+        setError("Failed to load dashboard data");
+      } else {
+        setError(null);
+      }
+      setLoading(false);
+    };
+    fetchAll();
+  }, []);
+
+  const computedStats = useMemo(() => {
+    const totalBooks = books.length;
+    const totalCopies = books.reduce(
+      (sum, b) => sum + (Number(b.totalCopies) || 0),
+      0
+    );
+    const availableCopies = books.reduce(
+      (sum, b) => sum + (Number(b.availableCopies) || 0),
+      0
+    );
+    const borrowedCopies = totalCopies - availableCopies;
+    const activeUsers = users.length;
+    const pendingReservations = borrows.filter((b) => b.status === "reserved").length;
+
+    return [
+      {
+        title: "Total Books",
+        value: String(totalBooks),
+        icon: <FaBook className="text-blue-500" />,
+        description: "Books in catalog",
+        bgColor: "bg-gradient-to-br from-blue-500 to-blue-600",
+      },
+      {
+        title: "Active Users",
+        value: String(activeUsers),
+        icon: <FaUsers className="text-green-500" />,
+        description: "Registered users",
+        bgColor: "bg-gradient-to-br from-green-500 to-green-600",
+      },
+      {
+        title: "Borrowed Copies",
+        value: String(borrowedCopies),
+        icon: <FaClipboardList className="text-yellow-500" />,
+        description: "Currently on loan",
+        bgColor: "bg-gradient-to-br from-yellow-500 to-yellow-600",
+      },
+      {
+        title: "Pending Reservations",
+        value: String(pendingReservations),
+        icon: <FaUsers className="text-purple-500" />,
+        description: "Awaiting confirmation",
+        bgColor: "bg-gradient-to-br from-purple-500 to-purple-600",
+      },
+    ];
+  }, [books, users, borrows]);
+
+  const booksAddedData = useMemo(() => {
+    const months = Array.from({ length: 12 }, (_, i) => ({ month: i, books: 0 }));
+    books.forEach((b) => {
+      const d = new Date(b.createdAt || Date.now());
+      const m = d.getMonth();
+      months[m].books += 1;
+    });
+    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return months.map((m) => ({ month: monthNames[m.month], books: m.books }));
+  }, [books]);
+
+  const recentActivities = useMemo(() => {
+    return recent.map((r) => ({
+      type: r.status === "borrowed" ? "Borrow" : r.status === "returned" ? "Return" : "Reservation",
+      detail: `${r.user} • ${r.book}`,
+      user: r.user,
+      date: new Date(r.date).toLocaleDateString(),
+      status: r.status === "borrowed" ? "Borrowed" : r.status === "returned" ? "Returned" : "Reserved",
+      icon:
+        r.status === "borrowed" ? (
+          <FaClock className="text-yellow-500" />
+        ) : r.status === "returned" ? (
+          <FaCheckCircle className="text-blue-500" />
+        ) : (
+          <FaPlusCircle className="text-green-500" />
+        ),
+    }));
+  }, [recent]);
 
   const getStatusBadge = (status) => {
     const baseClasses = "px-3 py-1 rounded-full text-xs font-medium";
@@ -162,7 +232,7 @@ const AdminDashboardModern = () => {
         <Navbar />
 
         {/* Header Section */}
-        <div className="mb-8">
+        <div className="mb-8 pt-6 md:pt-8">
           <h1
             className={`text-3xl md:text-4xl font-bold ${
               isDark ? "text-white" : "text-gray-900"
@@ -177,11 +247,20 @@ const AdminDashboardModern = () => {
           </p>
         </div>
 
+        {/* Loading / Error */}
+        {loading && (
+          <div className={`mb-8 ${isDark ? "text-gray-300" : "text-gray-600"}`}>Loading dashboard...</div>
+        )}
+        {error && (
+          <div className={`mb-8 ${isDark ? "text-red-300" : "text-red-600"}`}>{error}</div>
+        )}
+
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {quickActions.map((action, index) => (
             <Card
               key={index}
+              onClick={() => navigate(action.link)}
               className={`shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer ${
                 isDark
                   ? "bg-gray-800 border-gray-700"
@@ -216,10 +295,16 @@ const AdminDashboardModern = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat) => (
+          {computedStats.map((stat) => (
             <Card
               key={stat.title}
-              className={`shadow-lg hover:shadow-xl transition-all duration-300 ${
+              onClick={() => {
+                if (stat.title === "Total Books") navigate("/admin/books");
+                else if (stat.title === "Active Users") navigate("/admin/users");
+                else if (stat.title === "Borrowed Copies") navigate("/admin/orders");
+                else if (stat.title === "Pending Reservations") navigate("/admin/orders");
+              }}
+              className={`shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer ${
                 isDark ? "bg-gray-800" : "bg-white"
               } overflow-hidden`}
             >
@@ -338,90 +423,7 @@ const AdminDashboardModern = () => {
         </div>
 
         {/* Borrowing History */}
-        <Card
-          className={`shadow-lg mb-8 ${isDark ? "bg-gray-800" : "bg-white"}`}
-        >
-          <CardHeader className="pb-4">
-            <div className="flex items-center gap-3">
-              <FaBook className="text-green-500 text-xl" />
-              <CardTitle className={isDark ? "text-white" : "text-black"}>
-                Borrowing History
-              </CardTitle>
-            </div>
-            <CardDescription
-              className={isDark ? "text-gray-300" : "text-gray-600"}
-            >
-              Complete history of all book borrowings
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className={isDark ? "text-white" : "text-black"}>
-                    User
-                  </TableHead>
-                  <TableHead className={isDark ? "text-white" : "text-black"}>
-                    Book
-                  </TableHead>
-                  <TableHead className={isDark ? "text-white" : "text-black"}>
-                    Borrow Date
-                  </TableHead>
-                  <TableHead className={isDark ? "text-white" : "text-black"}>
-                    Due Date
-                  </TableHead>
-                  <TableHead className={isDark ? "text-white" : "text-black"}>
-                    Status
-                  </TableHead>
-                  <TableHead className={isDark ? "text-white" : "text-black"}>
-                    Fine
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {borrowingHistory.map((history) => (
-                  <TableRow
-                    key={history.id}
-                    className={`transition-colors ${
-                      isDark ? "hover:bg-gray-700" : "hover:bg-gray-50"
-                    }`}
-                  >
-                    <TableCell
-                      className={isDark ? "text-gray-300" : "text-gray-800"}
-                    >
-                      {history.userName}
-                    </TableCell>
-                    <TableCell
-                      className={isDark ? "text-gray-300" : "text-gray-800"}
-                    >
-                      {history.bookTitle}
-                    </TableCell>
-                    <TableCell
-                      className={isDark ? "text-gray-300" : "text-gray-800"}
-                    >
-                      {history.borrowDate}
-                    </TableCell>
-                    <TableCell
-                      className={isDark ? "text-gray-300" : "text-gray-800"}
-                    >
-                      {history.dueDate}
-                    </TableCell>
-                    <TableCell>
-                      <span className={getStatusBadge(history.status)}>
-                        {history.status}
-                      </span>
-                    </TableCell>
-                    <TableCell
-                      className={isDark ? "text-gray-300" : "text-gray-800"}
-                    >
-                      ${history.fineAmount.toFixed(2)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <BorrowingHistory isAdmin={true} />
 
         <Footer />
       </main>

@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { FaCheck, FaTimes, FaClock, FaExclamationTriangle, FaBook, FaUser, FaCalendarAlt } from "react-icons/fa";
 import { borrowAPI, utils } from "@/services/api";
+import toast from "react-hot-toast";
 
 const Orders = () => {
   const { isDark } = useTheme();
@@ -37,10 +38,24 @@ const Orders = () => {
       setActionLoading(prev => ({ ...prev, [borrowId]: true }));
       await borrowAPI.confirmCollection(borrowId, 14); // 14 days default
       await fetchBorrows(); // Refresh data
-      alert('Book collection confirmed successfully!');
+      toast.success('Book collection confirmed successfully!');
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to confirm collection');
+      toast.error(err.response?.data?.message || 'Failed to confirm collection');
       console.error('Error confirming collection:', err);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [borrowId]: false }));
+    }
+  };
+
+  const handleConfirmReturn = async (borrowId) => {
+    try {
+      setActionLoading(prev => ({ ...prev, [borrowId]: true }));
+      await borrowAPI.confirmReturn(borrowId);
+      await fetchBorrows(); // Refresh data
+      toast.success('Book return confirmed successfully!');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to confirm return');
+      console.error('Error confirming return:', err);
     } finally {
       setActionLoading(prev => ({ ...prev, [borrowId]: false }));
     }
@@ -49,10 +64,10 @@ const Orders = () => {
   const handleCancelExpiredReservations = async () => {
     try {
       await borrowAPI.cancelExpiredReservations();
-      await fetchBorrows(); // Refresh data
-      alert('Expired reservations cancelled successfully!');
+      await fetchBorrows(); // Refresh data to remove from page
+      toast.success('Expired reservations cancelled successfully!');
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to cancel expired reservations');
+      toast.error(err.response?.data?.message || 'Failed to cancel expired reservations');
       console.error('Error cancelling expired reservations:', err);
     }
   };
@@ -61,6 +76,7 @@ const Orders = () => {
     if (filter === 'all') return true;
     if (filter === 'pending') return borrow.status === 'reserved';
     if (filter === 'borrowed') return borrow.status === 'borrowed';
+    if (filter === 'return_requested') return borrow.status === 'return_requested';
     if (filter === 'returned') return borrow.status === 'returned';
     if (filter === 'overdue') return borrow.status === 'overdue' || (borrow.dueDate && utils.isOverdue(borrow.dueDate));
     return true;
@@ -68,12 +84,12 @@ const Orders = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-row min-h-screen bg-gray-100">
+      <div className={`flex flex-row min-h-screen ${isDark ? "bg-gray-900" : "bg-gray-100"}`}>
         <AdminSidebar />
         <main className="flex-1 px-6 py-3">
           <Navbar />
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${isDark ? "border-blue-400" : "border-blue-600"}`}></div>
           </div>
         </main>
       </div>
@@ -82,14 +98,14 @@ const Orders = () => {
 
   if (error) {
   return (
-    <div className="flex flex-row min-h-screen bg-gray-100">
+    <div className={`flex flex-row min-h-screen ${isDark ? "bg-gray-900" : "bg-gray-100"}`}>
       <AdminSidebar />
       <main className="flex-1 px-6 py-3">
         <Navbar />
-          <div className="text-center py-12">
-            <FaExclamationTriangle className="text-4xl text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-red-600 mb-2">Error</h3>
-            <p className="text-gray-600">{error}</p>
+          <div className={`text-center py-12 ${isDark ? "text-gray-200" : "text-gray-800"}`}>
+            <FaExclamationTriangle className={`text-4xl mx-auto mb-4 ${isDark ? "text-red-400" : "text-red-500"}`} />
+            <h3 className={`text-lg font-semibold mb-2 ${isDark ? "text-red-400" : "text-red-600"}`}>Error</h3>
+            <p className={isDark ? "text-gray-300" : "text-gray-600"}>{error}</p>
             <button
               onClick={fetchBorrows}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -109,7 +125,7 @@ const Orders = () => {
         <Navbar />
         
         <div className="max-w-7xl mx-auto">
-          <div className="mb-6">
+          <div className="mb-6 pt-6 md:pt-8">
             <h1 className={`text-3xl font-bold ${isDark ? "text-white" : "text-blue-600"} mb-2`}>
               Manage Borrowings & Reservations
             </h1>
@@ -137,6 +153,7 @@ const Orders = () => {
                   <option value="all">All</option>
                   <option value="pending">Pending Reservations</option>
                   <option value="borrowed">Borrowed</option>
+                  <option value="return_requested">Return Requested</option>
                   <option value="returned">Returned</option>
                   <option value="overdue">Overdue</option>
                 </select>
@@ -177,8 +194,8 @@ const Orders = () => {
                   </thead>
                   <tbody className={`divide-y ${isDark ? "divide-gray-700" : "divide-gray-200"}`}>
                     {filteredBorrows.map((borrow) => {
-                      const book = borrow.book;
-                      const user = borrow.user;
+                      const book = borrow.book || {};
+                      const user = borrow.user || {};
                       const daysRemaining = borrow.dueDate ? utils.getDaysRemaining(borrow.dueDate) : null;
                       const isOverdue = borrow.dueDate ? utils.isOverdue(borrow.dueDate) : false;
                       
@@ -187,16 +204,16 @@ const Orders = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <img
-                                src={utils.getBookCoverUrl(book)}
-                                alt={book.title}
+                                src={utils.getBookCoverUrl(book || {})}
+                                alt={book?.title || "Book"}
                                 className="w-12 h-16 object-cover rounded-lg mr-4"
                               />
                               <div>
                                 <div className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
-                                  {book.title}
+                                  {book?.title || "Unknown Title"}
                                 </div>
                                 <div className={`text-sm ${isDark ? "text-gray-300" : "text-gray-500"}`}>
-                                  by {book.author}
+                                  by {book?.author || "Unknown"}
                                 </div>
                               </div>
                             </div>
@@ -204,10 +221,10 @@ const Orders = () => {
                           
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className={`text-sm ${isDark ? "text-white" : "text-gray-900"}`}>
-                              {user.name}
+                              {user?.name || user?.username || "Unknown"}
                             </div>
                             <div className={`text-sm ${isDark ? "text-gray-300" : "text-gray-500"}`}>
-                              {user.email}
+                              {user?.email || ""}
                             </div>
                           </td>
                           
@@ -265,6 +282,20 @@ const Orders = () => {
                                 <FaCheck className="inline mr-1" />
                                 Collected
                               </span>
+                            )}
+                            {borrow.status === 'return_requested' && (
+                              <button
+                                onClick={() => handleConfirmReturn(borrow._id)}
+                                disabled={actionLoading[borrow._id]}
+                                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                                  actionLoading[borrow._id]
+                                    ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                                    : "bg-purple-600 hover:bg-purple-700 text-white"
+                                }`}
+                              >
+                                <FaCheck className="inline mr-1" />
+                                {actionLoading[borrow._id] ? "Confirming..." : "Confirm Return"}
+                              </button>
                             )}
                             {borrow.status === 'returned' && (
                               <span className="text-blue-600 text-sm">

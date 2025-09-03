@@ -3,13 +3,9 @@ import {
   FaUserCircle,
   FaBars,
   FaTimes,
-  FaBook,
-  FaUsers,
-  FaClipboardList,
-  FaSignOutAlt,
 } from "react-icons/fa";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import ThemeToggle from "@/components/ThemeToggle";
+import { Link, useLocation} from "react-router-dom";
+// Removed ThemeToggle from Navbar to avoid duplication with Sidebar
 import { useTheme } from "@/contexts/ThemeContext";
 
 const Navbar = () => {
@@ -17,31 +13,15 @@ const Navbar = () => {
   const { isDark } = useTheme();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const location = useLocation();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/");
-  };
 
   const displayName = user.username
     ? user.username.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
     : "";
 
-  const navItems = [
-    { path: "/admin/books", label: "Books", icon: <FaBook className="mr-2" /> },
-    {
-      path: "/admin/users",
-      label: "Users",
-      icon: <FaUsers className="mr-2" />,
-    },
-    {
-      path: "/admin/orders",
-      label: "Orders",
-      icon: <FaClipboardList className="mr-2" />,
-    },
-  ];
+  // Removed Books, Users, Orders from the top navbar as requested
+  const navItems = [];
 
   const isActive = (path) => location.pathname === path;
 
@@ -109,8 +89,6 @@ const Navbar = () => {
 
           {/* Right side items */}
           <div className="flex items-center space-x-4">
-            <ThemeToggle />
-
             {/* User profile */}
             <div className="flex items-center space-x-2">
               <div
@@ -133,17 +111,6 @@ const Navbar = () => {
                   {displayName}
                 </span>
               )}
-              <button
-                onClick={handleLogout}
-                className={`p-2 rounded-lg transition-colors ${
-                  isDark
-                    ? "text-gray-400 hover:text-white hover:bg-gray-800"
-                    : "text-gray-600 hover:text-red-600 hover:bg-gray-100"
-                }`}
-                title="Logout"
-              >
-                <FaSignOutAlt className="text-lg" />
-              </button>
             </div>
 
             {/* Mobile menu button */}

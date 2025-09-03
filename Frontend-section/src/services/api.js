@@ -43,6 +43,7 @@ export const authAPI = {
   login: (credentials) => api.post('/users/login', credentials),
   register: (userData) => api.post('/users/register', userData),
   getProfile: () => api.get('/users/profile'),
+  deleteProfile: () => api.delete('/users/profile'),
 };
 
 // Books API
@@ -108,8 +109,11 @@ export const borrowAPI = {
   // Request to borrow a book (creates reservation)
   requestBorrow: (bookId) => api.post('/borrow/request', { bookId }),
   
-  // Return a book
+  // Request to return a book (changes status to return_requested)
   returnBook: (borrowId) => api.post('/borrow/return', { borrowId }),
+  
+  // Admin confirms book return (changes status to returned)
+  confirmReturn: (borrowId) => api.post('/borrow/confirm-return', { borrowId }),
   
   // Get user's borrowing status
   getUserBorrowingStatus: () => api.get('/borrow/status'),
@@ -118,11 +122,15 @@ export const borrowAPI = {
   getAllBorrows: () => api.get('/borrow'),
   
   // Get pending reservations (Admin only)
-  getPendingReservations: () => api.get('/borrow/pending'),
+  getPendingReservations: () => api.get('/borrow/pending-reservations'),
+  
+  // Get borrowing history for a specific book (Admin only)
+  getBookBorrowingHistory: (bookId, page = 1, limit = 5) => 
+    api.get(`/borrow/book/${bookId}/history?page=${page}&limit=${limit}`),
   
   // Confirm book collection (Admin only)
   confirmCollection: (borrowId, days = 14) => 
-    api.post('/borrow/confirm', { borrowId, days }),
+    api.post('/borrow/confirm-collection', { borrowId, days }),
   
   // Cancel expired reservations (Admin only)
   cancelExpiredReservations: () => api.post('/borrow/cancel-expired'),
@@ -130,12 +138,18 @@ export const borrowAPI = {
 
 // Users API (Admin only)
 export const usersAPI = {
-  getAllUsers: () => api.get('/users'),
-  getUserById: (id) => api.get(`/users/${id}`),
-  updateUser: (id, userData) => api.put(`/users/${id}`, userData),
-  deleteUser: (id) => api.delete(`/users/${id}`),
-  approveMembership: (id) => api.put(`/users/${id}/approve`),
-  suspendMembership: (id) => api.put(`/users/${id}/suspend`),
+  // Super admin endpoints
+  getAllUsersSuperAdmin: () => api.get('/users/all'),
+  createAdmin: (userData) => api.post('/users/admin', userData),
+  promoteToAdmin: (userId) => api.put(`/users/promote/${userId}`),
+  demoteAdmin: (userId) => api.put(`/users/demote/${userId}`),
+  deleteAnyUser: (userId) => api.delete(`/users/${userId}`),
+  
+  // Admin endpoints
+  getAllUsersAdminView: () => api.get('/users/users'),
+  deleteRegularUser: (userId) => api.delete(`/users/user/${userId}`),
+  updateMembershipStatus: (userId, membershipStatus) => 
+    api.put(`/users/membership/${userId}`, { membershipStatus }),
 };
 
 // Reminder API (Admin only)
@@ -212,39 +226,43 @@ export const utils = {
     return '/src/assets/lib11.jpg'; // Default image
   },
   
-  // Get status color for borrow status
-  getStatusColor: (status) => {
-    switch (status) {
-      case 'reserved':
-        return 'bg-blue-100 text-blue-800';
-      case 'borrowed':
-        return 'bg-green-100 text-green-800';
-      case 'returned':
-        return 'bg-gray-100 text-gray-800';
-      case 'overdue':
-        return 'bg-red-100 text-red-800';
-      case 'expired':
-        return 'bg-yellow-100 text-yellow-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  },
-  
   // Get status text for borrow status
   getStatusText: (status) => {
     switch (status) {
-      case 'reserved':
-        return 'Reserved';
-      case 'borrowed':
-        return 'Borrowed';
-      case 'returned':
-        return 'Returned';
-      case 'overdue':
-        return 'Overdue';
-      case 'expired':
-        return 'Expired';
+      case "returned":
+        return "Returned";
+      case "borrowed":
+        return "Borrowed";
+      case "overdue":
+        return "Overdue";
+      case "reserved":
+        return "Reserved";
+      case "return_requested":
+        return "Return Requested";
+      case "expired":
+        return "Expired";
       default:
-        return 'Unknown';
+        return status;
+    }
+  },
+
+  // Get status color for borrow status
+  getStatusColor: (status) => {
+    switch (status) {
+      case "returned":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "borrowed":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+      case "overdue":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "reserved":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      case "return_requested":
+        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+      case "expired":
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
     }
   },
 };

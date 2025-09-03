@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FaImage, FaTimes, FaUpload } from "react-icons/fa";
 import { booksAPI } from "@/services/api";
+import toast from "react-hot-toast";
 
 const AddBook = () => {
   const { isDark } = useTheme();
@@ -121,10 +122,10 @@ const AddBook = () => {
       setCoverImage(null);
       setImagePreview(null);
 
-      alert("Book added successfully!");
+      toast.success("Book added successfully!");
     } catch (error) {
       console.error("Error adding book:", error);
-      alert(error.response?.data?.message || "Failed to add book. Please try again.");
+      toast.error(error.response?.data?.message || "Failed to add book. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

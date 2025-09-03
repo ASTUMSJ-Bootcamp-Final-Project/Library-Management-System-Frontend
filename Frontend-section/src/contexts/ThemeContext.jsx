@@ -14,8 +14,11 @@ export const useTheme = () => {
 
 // Theme provider component
 export const ThemeProvider = ({ children }) => {
-  // State to track the current theme
-  const [theme, setTheme] = useState("light");
+  // State to track the current theme (initialize from localStorage to avoid flash)
+  const [theme, setTheme] = useState(() => {
+    const saved = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
+    return saved || "light";
+  });
 
   // Function to toggle between light and dark themes
   const toggleTheme = () => {

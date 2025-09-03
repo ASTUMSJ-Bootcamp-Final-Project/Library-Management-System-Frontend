@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { FaUser, FaBell, FaSearch, FaSignOutAlt } from "react-icons/fa";
+import { FaUser, FaBell, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const StudentNavbar = () => {
@@ -8,12 +8,9 @@ const StudentNavbar = () => {
   const navigate = useNavigate();
   const data = localStorage.getItem("user");
   const student = JSON.parse(data);
+  const [query, setQuery] = useState("");
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/");
-  };
+
 
   // Mock student data
   const studentData = {
@@ -38,6 +35,16 @@ const StudentNavbar = () => {
             <input
               type="text"
               placeholder="Search books, authors..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const q = query.trim();
+                  if (q.length > 0) {
+                    navigate(`/student/browse-books?q=${encodeURIComponent(q)}`);
+                  }
+                }
+              }}
               className={`w-full pl-10 pr-4 py-2 rounded-lg border ${
                 isDark
                   ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
@@ -67,13 +74,15 @@ const StudentNavbar = () => {
 
           {/* User Profile */}
           <div className="flex items-center space-x-3">
-            <div
+            <button
+              onClick={() => navigate("/student/profile")}
               className={`w-10 h-10 rounded-full flex items-center justify-center ${
                 isDark ? "bg-blue-600" : "bg-blue-500"
               } text-white`}
+              aria-label="Open Profile"
             >
               <FaUser className="text-sm" />
-            </div>
+            </button>
             <div className="hidden md:block">
               <p
                 className={`text-sm font-medium ${
@@ -90,17 +99,7 @@ const StudentNavbar = () => {
                 {studentData.email}
               </p>
             </div>
-            <button
-              onClick={handleLogout}
-              className={`p-2 rounded-lg transition-colors ${
-                isDark
-                  ? "text-gray-400 hover:text-white hover:bg-gray-800"
-                  : "text-gray-600 hover:text-red-600 hover:bg-gray-100"
-              }`}
-              title="Logout"
-            >
-              <FaSignOutAlt className="text-lg" />
-            </button>
+            {/* Logout button removed to keep it only in the sidebar */}
           </div>
         </div>
       </div>

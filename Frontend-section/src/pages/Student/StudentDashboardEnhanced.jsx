@@ -15,7 +15,6 @@ const StudentDashboardEnhanced = () => {
   const student = JSON.parse(data);
   const studentData = {
     name: student.username,
-    id: student.id,
     email: student.email,
     borrowedBooks: 3,
     totalAllowed: 5,
@@ -57,11 +56,11 @@ const StudentDashboardEnhanced = () => {
       className={`flex min-h-screen ${isDark ? "bg-gray-900" : "bg-gray-50"}`}
     >
       <StudentSidebar />
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-5 md:p-6">
         <StudentNavbar />
 
-        {/* Header Section */}
-        <div className="mb-8">
+        {/* Header Section (under navbar) */}
+        <div className="mb-6 pt-6 md:pt-8">
           <h1
             className={`text-3xl md:text-4xl font-bold ${
               isDark ? "text-white" : "text-gray-900"
@@ -69,11 +68,7 @@ const StudentDashboardEnhanced = () => {
           >
             Welcome back, {studentData.name}!
           </h1>
-          <p
-            className={`text-lg ${isDark ? "text-gray-300" : "text-gray-600"}`}
-          >
-            Student ID: {studentData.id} • {studentData.email}
-          </p>
+          {/* Email hidden per requirement */}
         </div>
 
         {/* Quick Stats */}

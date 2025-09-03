@@ -5,6 +5,7 @@ import { MdEmail, MdLock, MdPerson } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import logo from "../assets/logo.jpg"; // Adjust path as needed
 import { authAPI } from "@/services/api";
+import toast from "react-hot-toast";
 const SignUpForm = () => {
   const navigate = useNavigate();
   const [error, setError] = useState("");
@@ -19,7 +20,6 @@ const SignUpForm = () => {
     const email = formData.get("email")?.trim();
     const password = formData.get("password")?.trim();
     const confirmPassword = formData.get("confirmPassword")?.trim();
-    const adminCode = formData.get("adminCode")?.trim();
     const terms = formData.get("terms") === "on";
 
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
@@ -27,9 +27,6 @@ const SignUpForm = () => {
     }
     if (password !== confirmPassword) {
       return setError("Passwords do not match.");
-    }
-    if (adminCode && !/^\d{6}$/.test(adminCode)) {
-      return setError("Admin code must be a valid 6-digit number.");
     }
     if (!terms) {
       return setError("You must agree to the terms.");
@@ -48,7 +45,7 @@ const SignUpForm = () => {
       const response = await authAPI.register(payload);
       console.log("Signup success:", response.data);
 
-      alert("Account created successfully! You can now log in.");
+      toast.success("Account created successfully! You can now log in.");
       e.target.reset();
       navigate("/");
     } catch (err) {
@@ -211,28 +208,7 @@ const SignUpForm = () => {
             </button>
           </div>
         </div>
-        {/* Admin Password (optional, no eye icon) */}
-        <div>
-          <label
-            className="block text-blue-900 font-semibold mb-1"
-            htmlFor="adminCode"
-          >
-            Admin 6-digit Code (optional)
-          </label>
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-400">
-              <MdLock size={20} />
-            </span>
-            <input
-              className="border text-black border-blue-300 rounded-md px-4 py-2 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-              type="password"
-              name="adminCode"
-              id="adminCode"
-              placeholder="Enter 6-digit admin code"
-              autoComplete="off"
-            />
-          </div>
-        </div>
+        
         <div className="flex items-center mb-2">
           <input
             type="checkbox"

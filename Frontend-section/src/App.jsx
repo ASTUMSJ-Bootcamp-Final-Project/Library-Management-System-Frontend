@@ -12,10 +12,36 @@ import Bookdetail from "./pages/Admin/Bookdetail";
 import StudentBookDetail from "./pages/Student/BookDetail";
 import BrowseBooks from "./pages/Student/BrowseBooks";
 import PrivateRoute from "@/routes/PrivateRoute";
+import { Toaster } from "react-hot-toast";
+import StudentProfile from "./pages/Student/Profile";
 
 const App = () => {
   return (
     <div>
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#4ade80',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            duration: 4000,
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
@@ -92,6 +118,14 @@ const App = () => {
           element={
             <PrivateRoute role="student">
               <BrowseBooks />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/student/profile"
+          element={
+            <PrivateRoute role="student">
+              <StudentProfile />
             </PrivateRoute>
           }
         />

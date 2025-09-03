@@ -2,8 +2,9 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import StudentBookCard from "@/components/StudentBookCard";
 import { FaSearch, FaFilter, FaSort, FaExclamationTriangle } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { booksAPI, borrowAPI, utils } from "@/services/api";
+import toast from "react-hot-toast";
 
 const BookListEnhanced = () => {
   const [search, setSearch] = useState("");
@@ -16,10 +17,19 @@ const BookListEnhanced = () => {
   const [actionLoading, setActionLoading] = useState({});
   const { isDark } = useTheme();
 
+  const location = useLocation();
+
   useEffect(() => {
     fetchBooks();
     fetchBorrowingStatus();
   }, []);
+
+  // Read query from URL and apply to search
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const q = params.get("q") || "";
+    setSearch(q);
+  }, [location.search]);
 
   const fetchBooks = async () => {
     try {
@@ -89,9 +99,9 @@ const BookListEnhanced = () => {
       setActionLoading(prev => ({ ...prev, [bookId]: true }));
       await borrowAPI.requestBorrow(bookId);
       await fetchBorrowingStatus(); // Refresh borrowing status
-      alert('Book reserved successfully! Please collect it within 24 hours.');
+      toast.success('Book reserved successfully! Please collect it within 24 hours.');
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to reserve book');
+      toast.error(err.response?.data?.message || 'Failed to reserve book');
       console.error('Error borrowing book:', err);
     } finally {
       setActionLoading(prev => ({ ...prev, [bookId]: false }));
@@ -206,7 +216,7 @@ const BookListEnhanced = () => {
       {/* Books Grid */}
       <div>
         {filteredBooks.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredBooks.map((book) => (
               <StudentBookCard 
                 key={book._id} 

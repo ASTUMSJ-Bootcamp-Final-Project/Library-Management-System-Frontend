@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import books from "@/demo/Bookdata";
+import { booksAPI, borrowAPI, utils } from "@/services/api";
 import AdminSidebar from "@/components/AdminSidebar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -15,45 +15,132 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import toast from "react-hot-toast";
 
-// Example borrow history (replace with real data if available)
-const borrowHistory = [
-  { user: "Jane Doe", date: "2025-08-18", action: "Borrowed" },
-  { user: "John Smith", date: "2025-08-17", action: "Returned" },
-  { user: "Alice Lee", date: "2025-08-15", action: "Borrowed" },
-];
+
 
 const Bookdetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isDark } = useTheme();
-  const book = books.find((b) => b.id === Number(id));
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [book, setBook] = useState(null);
 
   // Editable fields
-  const [title, setTitle] = useState(book?.title || "");
-  const [author, setAuthor] = useState(book?.author || "");
-  const [description, setDescription] = useState(book?.description || "");
-  const [totalAmount, setTotalAmount] = useState(book?.totalAmount || 0);
-  const [borrowed, setBorrowed] = useState(book?.borrowed || 0);
-  const [isbn, setIsbn] = useState(book?.isbn || "978-1-23456-789-0");
-  const [year, setYear] = useState(book?.year || "2022");
-  const [genre, setGenre] = useState(book?.genre || "Programming");
-  const [status, setStatus] = useState(book?.status);
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [description, setDescription] = useState("");
+  const [totalCopies, setTotalCopies] = useState(0);
+  const [availableCopies, setAvailableCopies] = useState(0);
+  const [isbn, setIsbn] = useState("");
+  const [year, setYear] = useState("");
+  const [genre, setGenre] = useState("");
 
-  if (!book) return <div className="p-6">Book not found.</div>;
+  // Borrowing history state
+  const [borrowHistory, setBorrowHistory] = useState([]);
+  const [borrowHistoryLoading, setBorrowHistoryLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+    limit: 5
+  });
 
-  const handleDelete = () => {
-    // Implement delete logic here (API or state update)
-    alert("Book deleted!");
-    navigate("/admin/books");
+  useEffect(() => {
+    const loadBook = async () => {
+      try {
+        setLoading(true);
+        const res = await booksAPI.getBookById(id);
+        const data = res.data;
+        setBook(data);
+        setTitle(data.title || "");
+        setAuthor(data.author || "");
+        setDescription(data.description || "");
+        setTotalCopies(Number(data.totalCopies) || 0);
+        setAvailableCopies(Number(data.availableCopies) || 0);
+        setIsbn(data.isbn || "");
+        setYear(data.publicationYear || "");
+        setGenre(data.category || "");
+        setError(null);
+      } catch (err) {
+        setError(err.response?.data?.message || "Book not found");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadBook();
+  }, [id]);
+
+  // Load borrowing history
+  const loadBorrowHistory = React.useCallback(
+    async (page = 1, limit = 5) => {
+      try {
+        setBorrowHistoryLoading(true);
+        const response = await borrowAPI.getBookBorrowingHistory(id, page, limit);
+        setBorrowHistory(response.data.borrowHistory);
+        setPagination(response.data.pagination);
+      } catch (err) {
+        console.error("Failed to load borrowing history:", err);
+        setBorrowHistory([]);
+      } finally {
+        setBorrowHistoryLoading(false);
+      }
+    },
+    [id]
+  );
+
+  // Load borrowing history when component mounts
+  useEffect(() => {
+    if (id) {
+      loadBorrowHistory(1, 5);
+    }
+  }, [id, loadBorrowHistory]);
+
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    loadBorrowHistory(newPage, pagination.limit);
   };
 
-  const handleUpdate = (e) => {
-    e.preventDefault();
+  // Handle rows per page change
+  const handleRowsPerPageChange = (newLimit) => {
+    loadBorrowHistory(1, newLimit);
+  };
 
-    // Implement update logic here (API or state update)
-    alert("Book updated successfully!");
-    // Optionally, navigate or refresh
+  if (loading) return <div className="p-6">Loading...</div>;
+  if (error) return <div className="p-6 text-red-600">{error}</div>;
+  if (!book) return <div className="p-6">Book not found.</div>;
+
+  const handleDelete = async () => {
+    try {
+      await booksAPI.deleteBook(id);
+      toast.success("Book deleted!");
+      navigate("/admin/books");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete book");
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await booksAPI.updateBook(id, {
+        title,
+        author,
+        description,
+        isbn,
+        publicationYear: year,
+        category: genre,
+        totalCopies,
+        availableCopies,
+      });
+      toast.success("Book updated successfully!");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update book");
+    }
   };
 
   return (
@@ -68,7 +155,7 @@ const Bookdetail = () => {
 
         <div className="max-w-6xl mx-auto">
           <h1
-            className={`text-3xl font-bold mb-6 ${
+            className={`text-3xl font-bold mb-6 pt-6 ${
               isDark ? "text-white" : "text-blue-600"
             }`}
           >
@@ -85,7 +172,7 @@ const Bookdetail = () => {
               </CardHeader>
               <CardContent className="flex flex-col items-center">
                 <img
-                  src={book.image}
+                  src={utils.getBookCoverUrl(book)}
                   alt={title}
                   className="w-full max-w-md h-80 object-contain rounded-lg shadow-xl mb-4 transform hover:scale-105 transition-transform duration-300"
                 />
@@ -94,7 +181,7 @@ const Bookdetail = () => {
                     isDark ? "text-gray-400" : "text-gray-600"
                   } text-center`}
                 >
-                  Book ID: {book.id}
+                  Book ID: {book._id}
                 </div>
               </CardContent>
             </Card>
@@ -213,43 +300,20 @@ const Bookdetail = () => {
                       />
                     </div>
 
-                    {/* Status */}
+                    {/* Total Copies */}
                     <div className="space-y-2">
                       <Label
-                        htmlFor="status"
-                        className={isDark ? "text-white" : ""}
-                      >
-                        Status
-                      </Label>
-                      <select
-                        id="status"
-                        value={status}
-                        onChange={(e) => setStatus(e.target.value)}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          isDark
-                            ? "bg-gray-700 border-gray-600 text-white"
-                            : "border-gray-300"
-                        }`}
-                      >
-                        <option value="Available">Available</option>
-                        <option value="Unavailable">Unavailable</option>
-                      </select>
-                    </div>
-
-                    {/* Total Amount */}
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="totalAmount"
+                        htmlFor="totalCopies"
                         className={isDark ? "text-white" : ""}
                       >
                         Total Copies *
                       </Label>
                       <Input
-                        id="totalAmount"
+                        id="totalCopies"
                         type="number"
                         min="0"
-                        value={totalAmount}
-                        onChange={(e) => setTotalAmount(Number(e.target.value))}
+                        value={totalCopies}
+                        onChange={(e) => setTotalCopies(Number(e.target.value))}
                         placeholder="Total copies"
                         className={
                           isDark ? "bg-gray-700 border-gray-600 text-white" : ""
@@ -258,21 +322,21 @@ const Bookdetail = () => {
                       />
                     </div>
 
-                    {/* Borrowed */}
+                    {/* Available Copies */}
                     <div className="space-y-2">
                       <Label
-                        htmlFor="borrowed"
+                        htmlFor="availableCopies"
                         className={isDark ? "text-white" : ""}
                       >
-                        Borrowed Copies
+                        Available Copies
                       </Label>
                       <Input
-                        id="borrowed"
+                        id="availableCopies"
                         type="number"
                         min="0"
-                        value={borrowed}
-                        onChange={(e) => setBorrowed(Number(e.target.value))}
-                        placeholder="Borrowed copies"
+                        value={availableCopies}
+                        onChange={(e) => setAvailableCopies(Number(e.target.value))}
+                        placeholder="Available copies"
                         className={
                           isDark ? "bg-gray-700 border-gray-600 text-white" : ""
                         }
@@ -332,100 +396,183 @@ const Bookdetail = () => {
           >
             <CardHeader>
               <CardTitle className={isDark ? "text-white" : ""}>
-                Borrow History
+                Recent Borrowing Activity for This Book
               </CardTitle>
               <CardDescription className={isDark ? "text-gray-400" : ""}>
-                Recent borrowing activity for this book
+                Track all borrowing and return activities
               </CardDescription>
             </CardHeader>
 
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr
-                      className={
-                        isDark
-                          ? "border-b border-gray-700"
-                          : "border-b border-gray-200"
-                      }
-                    >
-                      <th
-                        className={`text-left py-2 ${
-                          isDark ? "text-gray-300" : "text-gray-700"
-                        }`}
-                      >
-                        User
-                      </th>
-                      <th
-                        className={`text-left py-2 ${
-                          isDark ? "text-gray-300" : "text-gray-700"
-                        }`}
-                      >
-                        Action
-                      </th>
-                      <th
-                        className={`text-left py-2 ${
-                          isDark ? "text-gray-300" : "text-gray-700"
-                        }`}
-                      >
-                        Date
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {borrowHistory.map((entry, idx) => (
-                      <tr
-                        key={idx}
-                        className={
-                          isDark
-                            ? "border-b border-gray-700"
-                            : "border-b border-gray-200"
-                        }
-                      >
-                        <td
-                          className={`py-3 ${
-                            isDark ? "text-gray-300" : "text-gray-800"
-                          }`}
+              {borrowHistoryLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className={`mt-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                    Loading borrowing history...
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr
+                          className={
+                            isDark
+                              ? "border-b border-gray-700"
+                              : "border-b border-gray-200"
+                          }
                         >
-                          {entry.user}
-                        </td>
-                        <td
-                          className={`py-3 ${
-                            isDark ? "text-gray-300" : "text-gray-800"
-                          }`}
-                        >
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs ${
-                              entry.action === "Borrowed"
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-green-100 text-green-800"
+                          <th
+                            className={`text-left py-2 ${
+                              isDark ? "text-gray-300" : "text-gray-700"
                             }`}
                           >
-                            {entry.action}
-                          </span>
-                        </td>
-                        <td
-                          className={`py-3 ${
-                            isDark ? "text-gray-400" : "text-gray-500"
+                            User
+                          </th>
+                          <th
+                            className={`text-left py-2 ${
+                              isDark ? "text-gray-300" : "text-gray-700"
+                            }`}
+                          >
+                            Status
+                          </th>
+                          <th
+                            className={`text-left py-2 ${
+                              isDark ? "text-gray-300" : "text-gray-700"
+                            }`}
+                          >
+                            Borrow Date
+                          </th>
+                          <th
+                            className={`text-left py-2 ${
+                              isDark ? "text-gray-300" : "text-gray-700"
+                            }`}
+                          >
+                            Due Date
+                          </th>
+                          <th
+                            className={`text-left py-2 ${
+                              isDark ? "text-gray-300" : "text-gray-700"
+                            }`}
+                          >
+                            Return Date
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {borrowHistory.map((entry, idx) => (
+                          <tr
+                            key={entry._id || idx}
+                            className={
+                              isDark
+                                ? "border-b border-gray-700"
+                                : "border-b border-gray-200"
+                            }
+                          >
+                            <td
+                              className={`py-3 ${
+                                isDark ? "text-gray-300" : "text-gray-800"
+                              }`}
+                            >
+                              {entry.user?.username || "Unknown User"}
+                            </td>
+                            <td
+                              className={`py-3 ${
+                                isDark ? "text-gray-300" : "text-gray-800"
+                              }`}
+                            >
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs ${utils.getStatusColor(entry.status)}`}
+                              >
+                                {utils.getStatusText(entry.status)}
+                              </span>
+                            </td>
+                            <td
+                              className={`py-3 ${
+                                isDark ? "text-gray-400" : "text-gray-500"
+                              }`}
+                            >
+                              {entry.borrowDate ? utils.formatDate(entry.borrowDate) : "N/A"}
+                            </td>
+                            <td
+                              className={`py-3 ${
+                                isDark ? "text-gray-400" : "text-gray-500"
+                              }`}
+                            >
+                              {entry.dueDate ? utils.formatDate(entry.dueDate) : "N/A"}
+                            </td>
+                            <td
+                              className={`py-3 ${
+                                isDark ? "text-gray-400" : "text-gray-500"
+                              }`}
+                            >
+                              {entry.returnDate ? utils.formatDate(entry.returnDate) : "N/A"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {borrowHistory.length === 0 && (
+                    <div
+                      className={`text-center py-8 ${
+                        isDark ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
+                      No borrowing history available for this book
+                    </div>
+                  )}
+
+                  {/* Pagination Controls */}
+                  {pagination.totalCount > 0 && (
+                    <div className="flex items-center justify-between mt-6">
+                      <div className={`flex items-center space-x-2 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+                        <span>Rows per page:</span>
+                        <select
+                          value={pagination.limit}
+                          onChange={(e) => handleRowsPerPageChange(parseInt(e.target.value))}
+                          className={`px-2 py-1 border rounded ${
+                            isDark ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300"
                           }`}
                         >
-                          {entry.date}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          <option value={5}>5</option>
+                          <option value={10}>10</option>
+                          <option value={25}>25</option>
+                        </select>
+                      </div>
 
-              {borrowHistory.length === 0 && (
-                <div
-                  className={`text-center py-8 ${
-                    isDark ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
-                  No borrow history available
-                </div>
+                      <div className={`flex items-center space-x-4 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+                        <span>
+                          {((pagination.currentPage - 1) * pagination.limit) + 1}–
+                          {Math.min(pagination.currentPage * pagination.limit, pagination.totalCount)} of {pagination.totalCount}
+                        </span>
+                        
+                        <div className="flex space-x-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(pagination.currentPage - 1)}
+                            disabled={!pagination.hasPrevPage}
+                            className={isDark ? "border-gray-600 text-gray-300" : ""}
+                          >
+                            Previous
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(pagination.currentPage + 1)}
+                            disabled={!pagination.hasNextPage}
+                            className={isDark ? "border-gray-600 text-gray-300" : ""}
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
