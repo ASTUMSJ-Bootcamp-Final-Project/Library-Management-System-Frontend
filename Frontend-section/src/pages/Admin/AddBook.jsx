@@ -143,7 +143,7 @@ const AddBook = () => {
 
         <div className="max-w-4xl mx-auto">
           <h1
-            className={`text-3xl font-bold mb-6 ${
+            className={`text-3xl font-bold pt-8 mb-6 ${
               isDark ? "text-white" : "text-blue-600"
             }`}
           >
