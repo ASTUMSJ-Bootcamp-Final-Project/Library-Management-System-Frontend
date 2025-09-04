@@ -19,14 +19,16 @@ const BrowseBooks = () => {
         {/* Header Section */}
         <div className="mb-8">
           <h1
-            className={`text-3xl md:text-4xl font-bold ${
-              isDark ? "text-white" : "text-gray-900"
-            } mb-2`}
+            className={`text-3xl md:text-3xl font-bold ${
+              isDark ? "text-white" : "text-blue-600"
+            } mb-2 py-5` }
+            style={{ fontFamily: "Bebas_Neue" }}
+
           >
-            Browse Books
+            BROWSE BOOKS
           </h1>
           <p
-            className={`text-lg ${isDark ? "text-gray-300" : "text-gray-600"}`}
+            className={`text-md ${isDark ? "text-gray-300" : "text-gray-600"}`}
           >
             Explore our extensive collection of books
           </p>

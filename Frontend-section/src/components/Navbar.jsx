@@ -1,10 +1,11 @@
 import React, { useState } from "react";
+// filepath: c:\Users\Abedu\Desktop\a\Library-Management-System-Frontend\Frontend-section\src\components\AdminSidebar.jsx
 import {
   FaUserCircle,
   FaBars,
   FaTimes,
   FaBook,
-  FaUsers,
+  FaUser,
   FaClipboardList,
 } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
@@ -26,7 +27,7 @@ const Navbar = () => {
     {
       path: "/admin/users",
       label: "Users",
-      icon: <FaUsers className="mr-2" />,
+      icon: <FaUser className="mr-2" />,
     },
     {
       path: "/admin/orders",
@@ -52,69 +53,34 @@ const Navbar = () => {
             to="/admin"
             className="flex items-center space-x-2 text-xl font-bold tracking-tight"
           >
-            <div
-              className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                isDark
-                  ? "bg-blue-600"
-                  : "bg-gradient-to-r from-blue-600 to-blue-400"
-              }`}
-            >
-              <span className="text-white font-bold text-sm">A</span>
-            </div>
+            
             <span
               className={`hidden sm:block ${
                 isDark ? "text-white" : "text-gray-900"
+                
               }`}
             >
-              ASTUMSJ
+            
+              ASTUMSJ ADMIN PAGE
             </span>
-            <span
-              className={`hidden sm:block ${
-                isDark ? "text-gray-400" : "text-gray-600"
-              } font-normal ml-1`}
-            >
-              Admin
-            </span>
+           
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive(item.path)
-                    ? isDark
-                      ? "bg-blue-600 text-white shadow-lg"
-                      : "bg-blue-100 text-blue-700 border border-blue-200"
-                    : isDark
-                    ? "text-gray-300 hover:text-white hover:bg-gray-800"
-                    : "text-gray-600 hover:text-blue-700 hover:bg-gray-100"
-                }`}
-              >
-                {item.icon}
-                {item.label}
-              </Link>
-            ))}
-          </div>
+         
 
           {/* Right side items */}
           <div className="flex items-center space-x-4">
-            <ThemeToggle />
+            {/* <ThemeToggle /> */}
 
             {/* User profile */}
             <div className="flex items-center space-x-2">
+             
               <div
-                className={`p-2 rounded-full ${
-                  isDark ? "bg-gray-800" : "bg-gray-100"
-                }`}
+                className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                isDark ? "bg-blue-600" : "bg-blue-500"
+                } text-white`}
               >
-                <FaUserCircle
-                  className={`text-xl ${
-                    isDark ? "text-gray-400" : "text-gray-600"
-                  }`}
-                />
+                <FaUser className="text-sm" />
               </div>
               {displayName && (
                 <span

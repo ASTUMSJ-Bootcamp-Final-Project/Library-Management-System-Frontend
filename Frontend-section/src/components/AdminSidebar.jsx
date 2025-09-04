@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import logo from "@/assets/logo.jpg";
 import {
   FaTachometerAlt,
   FaBook,
@@ -45,6 +46,7 @@ const AdminSidebar = () => {
       } ${collapsed ? "w-20" : "w-64"}`}
     >
       {/* Header */}
+      
       <div
         className={`flex items-center p-4 border-b ${
           isDark ? "border-gray-700" : "border-gray-200"
@@ -58,19 +60,20 @@ const AdminSidebar = () => {
               : "text-gray-600 hover:text-blue-700 hover:bg-gray-100"
           }`}
         >
-          {collapsed ? (
-            <FaBars className="text-lg" />
-          ) : (
-            <FaTimes className="text-lg" />
-          )}
+          <img
+            src={logo}
+            alt="Logo"
+            className="w-9 h-9"
+            style={{ borderRadius: "50%" }}
+          />
         </button>
         {!collapsed && (
           <span
-            className={`ml-3 font-bold text-lg ${
+            className={`ml-3 font-bold text-md ${
               isDark ? "text-white" : "text-gray-900"
             }`}
           >
-            ASTUMSJ Library
+            ASTUMSJ LIBRARY
           </span>
         )}
       </div>
@@ -92,11 +95,7 @@ const AdminSidebar = () => {
                     : "text-gray-600 hover:text-blue-700 hover:bg-gray-100"
                 }`}
               >
-                <span
-                  className={`text-lg ${
-                    isActive(item.link) ? "text-white" : ""
-                  }`}
-                >
+                <span className="text-lg text-blue-600">
                   {item.icon}
                 </span>
                 {!collapsed && (

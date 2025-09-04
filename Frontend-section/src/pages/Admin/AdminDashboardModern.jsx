@@ -1,6 +1,6 @@
 import AdminSidebar from "@/components/AdminSidebar";
 import { useTheme } from "@/contexts/ThemeContext";
-import React from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardHeader,
@@ -107,32 +107,21 @@ const recentActivities = [
   },
 ];
 
-const quickActions = [
-  {
-    title: "Add New Book",
-    description: "Add a new book to the library collection",
-    icon: <FaPlusCircle className="text-2xl" />,
-    link: "/admin/add-book",
-    color: "bg-blue-500 hover:bg-blue-600",
-  },
-  {
-    title: "View Analytics",
-    description: "Check detailed library analytics and reports",
-    icon: <FaChartLine className="text-2xl" />,
-    link: "/admin/analytics",
-    color: "bg-green-500 hover:bg-green-600",
-  },
-  {
-    title: "Manage Users",
-    description: "View and manage library users and permissions",
-    icon: <FaUsers className="text-2xl" />,
-    link: "/admin/users",
-    color: "bg-purple-500 hover:bg-purple-600",
-  },
-];
+const ROWS_PER_PAGE = 10;
 
 const AdminDashboardModern = () => {
   const { isDark } = useTheme();
+
+  // Pagination state
+  const [page, setPage] = useState(0);
+
+  const totalRows = borrowingHistory.length;
+  const totalPages = Math.ceil(totalRows / ROWS_PER_PAGE);
+
+  const paginatedRows = borrowingHistory.slice(
+    page * ROWS_PER_PAGE,
+    page * ROWS_PER_PAGE + ROWS_PER_PAGE
+  );
 
   const getStatusBadge = (status) => {
     const baseClasses = "px-3 py-1 rounded-full text-xs font-medium";
@@ -164,54 +153,18 @@ const AdminDashboardModern = () => {
         {/* Header Section */}
         <div className="mb-8">
           <h1
-            className={`text-3xl md:text-4xl font-bold ${
-              isDark ? "text-white" : "text-gray-900"
-            } mb-2`}
+            className={`text-3xl md:text-3xl font-bold ${
+              isDark ? "text-white" : "text-blue-600"
+            } mb-2  py-5`}
+            style={{ fontFamily: "Bebas_Neue" }}
           >
-            Welcome to ASTUMSJ Library Admin Dashboard
+            WELCOME TO ASTUMSJ LIBRARY ADMIN DASHBOARD
           </h1>
           <p
             className={`text-lg ${isDark ? "text-gray-300" : "text-gray-600"}`}
           >
             Manage your library system with ease and efficiency
           </p>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {quickActions.map((action, index) => (
-            <Card
-              key={index}
-              className={`shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer ${
-                isDark
-                  ? "bg-gray-800 border-gray-700"
-                  : "bg-white border-gray-200"
-              } border-2 hover:border-blue-500`}
-            >
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 rounded-lg ${action.color} text-white`}>
-                    {action.icon}
-                  </div>
-                  <FaArrowRight className="text-gray-400" />
-                </div>
-                <h3
-                  className={`text-lg font-semibold mb-2 ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  {action.title}
-                </h3>
-                <p
-                  className={`text-sm ${
-                    isDark ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  {action.description}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
         </div>
 
         {/* Stats Cards */}
@@ -355,74 +308,111 @@ const AdminDashboardModern = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className={isDark ? "text-white" : "text-black"}>
-                    User
-                  </TableHead>
-                  <TableHead className={isDark ? "text-white" : "text-black"}>
-                    Book
-                  </TableHead>
-                  <TableHead className={isDark ? "text-white" : "text-black"}>
-                    Borrow Date
-                  </TableHead>
-                  <TableHead className={isDark ? "text-white" : "text-black"}>
-                    Due Date
-                  </TableHead>
-                  <TableHead className={isDark ? "text-white" : "text-black"}>
-                    Status
-                  </TableHead>
-                  <TableHead className={isDark ? "text-white" : "text-black"}>
-                    Fine
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {borrowingHistory.map((history) => (
-                  <TableRow
-                    key={history.id}
-                    className={`transition-colors ${
-                      isDark ? "hover:bg-gray-700" : "hover:bg-gray-50"
-                    }`}
-                  >
-                    <TableCell
-                      className={isDark ? "text-gray-300" : "text-gray-800"}
-                    >
-                      {history.userName}
-                    </TableCell>
-                    <TableCell
-                      className={isDark ? "text-gray-300" : "text-gray-800"}
-                    >
-                      {history.bookTitle}
-                    </TableCell>
-                    <TableCell
-                      className={isDark ? "text-gray-300" : "text-gray-800"}
-                    >
-                      {history.borrowDate}
-                    </TableCell>
-                    <TableCell
-                      className={isDark ? "text-gray-300" : "text-gray-800"}
-                    >
-                      {history.dueDate}
-                    </TableCell>
-                    <TableCell>
-                      <span className={getStatusBadge(history.status)}>
-                        {history.status}
-                      </span>
-                    </TableCell>
-                    <TableCell
-                      className={isDark ? "text-gray-300" : "text-gray-800"}
-                    >
-                      ${history.fineAmount.toFixed(2)}
-                    </TableCell>
+            <div
+              className="overflow-x-auto overflow-y-auto"
+              style={{ maxHeight: "320px", minHeight: "200px" }}
+            >
+              <Table className="min-w-[700px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className={isDark ? "text-white" : "text-black"}>
+                      User
+                    </TableHead>
+                    <TableHead className={isDark ? "text-white" : "text-black"}>
+                      Book
+                    </TableHead>
+                    <TableHead className={isDark ? "text-white" : "text-black"}>
+                      Borrow Date
+                    </TableHead>
+                    <TableHead className={isDark ? "text-white" : "text-black"}>
+                      Due Date
+                    </TableHead>
+                    <TableHead className={isDark ? "text-white" : "text-black"}>
+                      Status
+                    </TableHead>
+                    <TableHead className={isDark ? "text-white" : "text-black"}>
+                      Fine
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {paginatedRows.map((history) => (
+                    <TableRow
+                      key={history.id}
+                      className={`transition-colors ${
+                        isDark ? "hover:bg-gray-700" : "hover:bg-gray-50"
+                      }`}
+                    >
+                      <TableCell
+                        className={isDark ? "text-gray-300" : "text-gray-800"}
+                      >
+                        {history.userName}
+                      </TableCell>
+                      <TableCell
+                        className={isDark ? "text-gray-300" : "text-gray-800"}
+                      >
+                        {history.bookTitle}
+                      </TableCell>
+                      <TableCell
+                        className={isDark ? "text-gray-300" : "text-gray-800"}
+                      >
+                        {history.borrowDate}
+                      </TableCell>
+                      <TableCell
+                        className={isDark ? "text-gray-300" : "text-gray-800"}
+                      >
+                        {history.dueDate}
+                      </TableCell>
+                      <TableCell>
+                        <span className={getStatusBadge(history.status)}>
+                          {history.status}
+                        </span>
+                      </TableCell>
+                      <TableCell
+                        className={isDark ? "text-gray-300" : "text-gray-800"}
+                      >
+                        ${history.fineAmount.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            {/* Pagination controls */}
+            <div className="flex items-center justify-end mt-2 space-x-4">
+              <span className={isDark ? "text-white" : "text-gray-800"}>
+                {page * ROWS_PER_PAGE + 1}–
+                {Math.min((page + 1) * ROWS_PER_PAGE, totalRows)} of {totalRows}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.max(p - 1, 0))}
+                disabled={page === 0}
+                className={`px-2 py-1 text-lg ${
+                  page === 0
+                    ? "text-gray-400 cursor-not-allowed"
+                    : isDark
+                    ? "text-white"
+                    : "text-gray-800"
+                }`}
+              >
+                &#60;
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+                disabled={page >= totalPages - 1}
+                className={`px-2 py-1 text-lg ${
+                  page >= totalPages - 1
+                    ? "text-gray-400 cursor-not-allowed"
+                    : isDark
+                    ? "text-white"
+                    : "text-gray-800"
+                }`}
+              >
+                &#62;
+              </button>
+            </div>
           </CardContent>
         </Card>
-
         <Footer />
       </main>
     </div>

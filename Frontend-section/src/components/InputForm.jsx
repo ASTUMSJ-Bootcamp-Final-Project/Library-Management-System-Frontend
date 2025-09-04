@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { MdEmail, MdLock } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
-const API_URL = "http://localhost:3000/api/users/login";
+const API_URL = "http://localhost:5000/api/users/login";
 
 const InputForm = () => {
   const navigate = useNavigate();
@@ -29,15 +29,17 @@ const InputForm = () => {
         return;
       }
 
+      
       // Save token and user info
       localStorage.setItem("token", data.accessToken);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      if (data.user.isAdmin) {
+      if (data.user.role === "admin") {
         navigate("/admin");
       } else {
         navigate("/student");
       }
+
     } catch (err) {
       setError("Network error");
     }

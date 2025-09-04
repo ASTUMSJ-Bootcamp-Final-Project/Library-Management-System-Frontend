@@ -68,11 +68,12 @@ const Bookdetail = () => {
 
         <div className="max-w-6xl mx-auto">
           <h1
-            className={`text-3xl font-bold mb-6 ${
-              isDark ? "text-white" : "text-blue-600"
-            }`}
+            className={`text-3xl md:text-3xl font-bold ${
+        isDark ? "text-white" : "text-blue-600"
+        } mb-2 px-85 py-5`}
+          style={{ fontFamily: "Bebas_Neue" }}
           >
-            Book Details
+            BOOK DETAILS
           </h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

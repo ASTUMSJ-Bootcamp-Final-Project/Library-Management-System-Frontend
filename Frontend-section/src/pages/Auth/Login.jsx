@@ -1,23 +1,28 @@
 import InputForm from "@/components/InputForm";
 import React from "react";
-import booksBg from "../../assets/lib11.jpg";
+import logo from "../../assets/logo.jpg";
+
 const Login = () => {
   return (
     <div
       className="flex items-center justify-center min-h-screen relative"
       style={{
-        backgroundImage: `url(${booksBg})`,
+        backgroundColor: "hsla(200, 23%, 98%, 1.00)", // subtle light gray
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
     >
-      {/* Subtle blue gradient overlay for readability */}
-      {/* <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 via-blue-500/20 to-transparent"></div> */}
-      <div className="relative z-10 flex flex-col items-center text-white bg-opacity-80 rounded-xl shadow-xl p-8 backdrop-blur-md">
-        <h1 className="text-4xl font-bold text-white mb-6 drop-shadow-lg">
-          ASTUMSJ Library Login
-        </h1>
-        <InputForm />
+      {/* Blur overlay */}
+      {/*<div className="absolute inset-0 bg-white/40 backdrop-blur-sm z-0"></div>*/}
+      <div className="relative z-10 flex flex-col items-center w-full max-w-md">
+      <div className="bg-white rounded-[30px] shadow-2xl shadow-black-2000 p-8 w-105">          <div className="flex flex-col items-center mb-6">
+            <img src={logo} alt="ASTUMSJ Logo" className="w-16 h-16 mb-2 rounded-full shadow" />
+            <h2 className="text-3xl font-bold text-blue-900 mb-1" style={{ fontFamily: "Orbitron" }}>ASTUMSJ LIBRARY</h2>
+            <h6 className=" text-gray-800 mb-1">Welcome to ASTUMSJ-library</h6>
+
+          </div>
+          <InputForm />
+        </div>
       </div>
     </div>
   );

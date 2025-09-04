@@ -11,25 +11,25 @@ const StudentDashboardEnhanced = () => {
   const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState("books");
 
-  const data = localStorage.getItem("user");
-  const student = JSON.parse(data);
-  const studentData = {
-    name: student.username,
-    id: student.id,
-    email: student.email,
-    borrowedBooks: 3,
-    totalAllowed: 5,
-    fineAmount: 0,
-  };
-  // Mock student data
+  // const data = localStorage.getItem("user");
+  // const student = JSON.parse(data);
   // const studentData = {
-  //   name: "John Doe",
-  //   id: "STU001",
-  //   email: "john.doe@student.edu",
+  //   name: student.username,
+  //   id: student.id,
+  //   email: student.email,
   //   borrowedBooks: 3,
   //   totalAllowed: 5,
   //   fineAmount: 0,
   // };
+  
+  const studentData = {
+    name: "ABDU",
+    id: "STU001",
+    email: "john.doe@student.edu",
+    borrowedBooks: 3,
+    totalAllowed: 5,
+    fineAmount: 0,
+  };
 
   const stats = [
     {
@@ -45,8 +45,8 @@ const StudentDashboardEnhanced = () => {
       color: "bg-green-500",
     },
     {
-      title: "Pending Fines",
-      value: `$${studentData.fineAmount}`,
+      title: "Pending Book",
+      value: `${studentData.fineAmount}`,
       icon: <FaClock className="text-2xl" />,
       color: "bg-yellow-500",
     },
@@ -63,17 +63,14 @@ const StudentDashboardEnhanced = () => {
         {/* Header Section */}
         <div className="mb-8">
           <h1
-            className={`text-3xl md:text-4xl font-bold ${
-              isDark ? "text-white" : "text-gray-900"
-            } mb-2`}
+            className={`text-2xl md:text-3xl font-bold ${
+              isDark ? "text-white" : "text-blue-600"
+            } mb-2 py-5`}
+            style={{ fontFamily: "Bebas_Neue" }}
           >
-            Welcome back, {studentData.name}!
+            WELCOME BACK, {studentData.name }!
           </h1>
-          <p
-            className={`text-lg ${isDark ? "text-gray-300" : "text-gray-600"}`}
-          >
-            Student ID: {studentData.id} • {studentData.email}
-          </p>
+          
         </div>
 
         {/* Quick Stats */}

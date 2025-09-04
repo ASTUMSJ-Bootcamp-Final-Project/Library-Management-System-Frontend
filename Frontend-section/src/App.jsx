@@ -19,8 +19,21 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/add-book" element={<AddBook/>} />
+        <Route path="/student" element={< StudentDashboard/>} />
+        <Route path="/admin/book/:id" element={<Bookdetail />} />
+        <Route path="/admin/users" element={<ManageUsers/>} />
+        <Route path="/admin/orders" element={< AddBook/>} />
+        <Route path="/admin/books" element={< ManageBook/>} />
+        <Route path="/student/browse-books" element={< BrowseBooks/>} />
+        <Route path="/student/book/:id" element={< StudentBookDetail/>} />
 
-        {/* Admin Routes */}
+
+
+
+
+        {/* Admin Routes
         <Route
           path="/admin"
           element={
@@ -28,49 +41,50 @@ const App = () => {
               <AdminDashboard />
             </PrivateRoute>
           }
-        />
-        <Route
+        /> */}
+
+        {/* <Route
           path="/admin/users"
           element={
             <PrivateRoute role="admin">
               <ManageUsers />
             </PrivateRoute>
           }
-        />
-        <Route
+        /> */}
+        {/* <Route
           path="/admin/add-book"
           element={
             <PrivateRoute role="admin">
               <AddBook />
             </PrivateRoute>
           }
-        />
-        <Route
+        /> */}
+        {/* <Route
           path="/admin/orders"
           element={
             <PrivateRoute role="admin">
               <Orders />
             </PrivateRoute>
           }
-        />
-        <Route
+        /> */}
+        {/* <Route
           path="/admin/books"
           element={
             <PrivateRoute role="admin">
               <ManageBook />
             </PrivateRoute>
           }
-        />
-        <Route
+        /> */}
+        {/* <Route
           path="/admin/book/:id"
           element={
             <PrivateRoute role="admin">
               <Bookdetail />
             </PrivateRoute>
           }
-        />
+        /> */}
 
-        {/* Student Routes */}
+        {/* Student Routes
         <Route
           path="/student"
           element={
@@ -78,8 +92,8 @@ const App = () => {
               <StudentDashboard />
             </PrivateRoute>
           }
-        />
-        <Route
+        /> */}
+        {/* <Route
           path="/student/book/:id"
           element={
             <PrivateRoute role="student">
@@ -94,7 +108,7 @@ const App = () => {
               <BrowseBooks />
             </PrivateRoute>
           }
-        />
+        /> */}
       </Routes>
     </div>
   );

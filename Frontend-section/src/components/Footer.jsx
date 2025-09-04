@@ -1,5 +1,5 @@
 import React from "react";
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from "react-icons/fa";
+import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin,FaTelegramPlane } from "react-icons/fa";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const Footer = () => {
@@ -14,13 +14,21 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between">
         <div className="flex flex-col mb-4 md:mb-0">
           <span className="font-semibold text-lg tracking-wide">
-            &copy; {new Date().getFullYear()} ASTUMSJ Library Admin
+            &copy; {new Date().getFullYear()} ASTUMSJ Library
           </span>
           <span className="text-sm">
             Powered by <span className="font-bold text-blue-600">ASTUMSJ</span>
           </span>
         </div>
         <div className="flex space-x-4">
+           <a
+            href="https://t.me/ASTU_MSJ"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-blue-600 transition"
+          >
+            <FaTelegramPlane className="text-xl" />
+          </a>
           <a
             href="https://facebook.com"
             target="_blank"

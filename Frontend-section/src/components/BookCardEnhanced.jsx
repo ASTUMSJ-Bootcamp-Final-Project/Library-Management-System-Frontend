@@ -171,17 +171,7 @@ const BookCardEnhanced = ({ book }) => {
               <FaEye size={14} />
               View Details
             </button>
-            <button
-              className={`py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-                isDark
-                  ? "bg-gray-700 hover:bg-gray-600 text-white"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-800"
-              }`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <FaEdit size={14} />
-              Edit
-            </button>
+           
           </div>
         </div>
       </div>

@@ -107,11 +107,14 @@ const AddBook = () => {
 
         <div className="max-w-4xl mx-auto">
           <h1
-            className={`text-3xl font-bold mb-6 ${
-              isDark ? "text-white" : "text-blue-600"
-            }`}
+            className={`text-3xl md:text-3xl font-bold ${
+        isDark ? "text-white" : "text-blue-600"
+        } mb-2 px-80 py-5`}
+             
+         style={{ fontFamily: "Bebas_Neue" }}
+       
           >
-            Add New Book
+            ADD NEW BOOK
           </h1>
 
           <Card className={isDark ? "bg-gray-800 border-gray-700" : ""}>

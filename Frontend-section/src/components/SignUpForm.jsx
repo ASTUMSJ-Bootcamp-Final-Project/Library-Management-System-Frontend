@@ -47,7 +47,7 @@ const SignUpForm = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/users/register",
+        "http://localhost:5000/api/users/register",
         payload
       );
       console.log("Signup success:", response.data);
@@ -71,8 +71,11 @@ const SignUpForm = () => {
           alt="Logo"
           className="w-16 h-16 mb-2 rounded-full shadow"
         />
-        <h2 className="text-3xl font-bold text-blue-900 mb-1">
-          Create Account
+        <h2 className="text-3xl font-bold text-blue-900 mb-2"
+                      style={{ fontFamily: "Bebas_Neue" }}
+        >
+          
+          CREATE ACCOUNT
         </h2>
         <p className="text-black mb-2 text-center">
           Join our library management system
@@ -215,28 +218,7 @@ const SignUpForm = () => {
             </button>
           </div>
         </div>
-        {/* Admin Password (optional, no eye icon) */}
-        <div>
-          <label
-            className="block text-blue-900 font-semibold mb-1"
-            htmlFor="adminCode"
-          >
-            Admin 6-digit Code (optional)
-          </label>
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-400">
-              <MdLock size={20} />
-            </span>
-            <input
-              className="border text-black border-blue-300 rounded-md px-4 py-2 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-              type="password"
-              name="adminCode"
-              id="adminCode"
-              placeholder="Enter 6-digit admin code"
-              autoComplete="off"
-            />
-          </div>
-        </div>
+        
         <div className="flex items-center mb-2">
           <input
             type="checkbox"

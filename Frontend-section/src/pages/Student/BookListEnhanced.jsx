@@ -135,7 +135,10 @@ const BookListEnhanced = () => {
       {/* Books Grid */}
       <div>
         {filteredBooks.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto"
+            style={{ maxHeight: "500px" }} // Adjust height as needed
+          >
             {filteredBooks.map((book) => (
               <Link to={`/student/book/${book.id}`} key={book.id}>
                 <StudentBookCard book={book} onBorrow={handleBorrowBook} />
