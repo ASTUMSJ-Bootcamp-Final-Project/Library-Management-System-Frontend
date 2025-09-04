@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import StudentSidebar from "@/components/StudentSidebar";
 import StudentNavbar from "@/components/StudentNavbar";
 import Footer from "@/components/Footer";
@@ -6,48 +6,125 @@ import BookList from "./BookListEnhanced";
 import MyBooks from "./MyBooksEnhanced";
 import { useTheme } from "@/contexts/ThemeContext";
 import { FaBook, FaUser, FaClock, FaSearch } from "react-icons/fa";
+import { borrowAPI } from "@/services/api";
 
 const StudentDashboardEnhanced = () => {
   const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState("books");
+  const [borrowingStatus, setBorrowingStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const data = localStorage.getItem("user");
-  const student = JSON.parse(data);
-  const studentData = {
-    name: student.username,
-    email: student.email,
-    borrowedBooks: 3,
-    totalAllowed: 5,
-    fineAmount: 0,
+  const student = data ? JSON.parse(data) : {};
+  
+  // Resolve membership end date: only use membershipExpiryDate
+  const getMembershipEndDate = () => {
+    if (student && student.membershipExpiryDate) {
+      const d = new Date(student.membershipExpiryDate);
+      if (!isNaN(d.getTime())) return d;
+    }
+    return null;
   };
-  // Mock student data
-  // const studentData = {
-  //   name: "John Doe",
-  //   id: "STU001",
-  //   email: "john.doe@student.edu",
-  //   borrowedBooks: 3,
-  //   totalAllowed: 5,
-  //   fineAmount: 0,
-  // };
+
+  const getMembershipTimeLeft = () => {
+    try {
+      const end = getMembershipEndDate();
+      if (!end) return { text: "N/A", isExpired: false };
+      const now = new Date();
+      const diffMs = end.getTime() - now.getTime();
+      if (diffMs <= 0) return { text: "Expired", isExpired: true };
+      const totalDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      const months = Math.floor(totalDays / 30);
+      const days = totalDays % 30;
+      if (months > 0 && days > 0) return { text: `${months} mo ${days} d`, isExpired: false };
+      if (months > 0) return { text: `${months} mo`, isExpired: false };
+      return { text: `${totalDays} d`, isExpired: false };
+    } catch {
+      return { text: "N/A", isExpired: false };
+    }
+  };
+
+  const membershipLeft = getMembershipTimeLeft();
+  const getMembershipLeftColor = () => {
+    if (membershipLeft.isExpired) return "bg-red-500";
+    const text = membershipLeft.text;
+    const daysMatch = /([0-9]+) d$/.exec(text);
+    const days = daysMatch ? Number(daysMatch[1]) : null;
+    if (days !== null) {
+      if (days <= 7) return "bg-orange-500";
+      if (days <= 30) return "bg-yellow-500";
+      return "bg-green-500";
+    }
+    return "bg-green-500";
+  };
+  
+  // Get membership status with proper color mapping
+  const getMembershipStatus = () => {
+    try {
+      const status = student?.membershipStatus || "pending";
+      switch (status) {
+        case "approved":
+          return { text: "Active", color: "bg-green-500" };
+        case "pending":
+        case "waiting_for_approval":
+          return { text: "Pending", color: "bg-yellow-500" };
+        case "canceled":
+          return { text: "Inactive", color: "bg-red-500" };
+        default:
+          return { text: "Pending", color: "bg-yellow-500" };
+      }
+    } catch (error) {
+      console.error("Error getting membership status:", error);
+      return { text: "Pending", color: "bg-yellow-500" };
+    }
+  };
+
+  const membershipStatus = getMembershipStatus();
+
+  useEffect(() => {
+    const fetchBorrowingStatus = async () => {
+      try {
+        setLoading(true);
+        const response = await borrowAPI.getUserBorrowingStatus();
+        setBorrowingStatus(response.data);
+      } catch (err) {
+        console.error('Error fetching borrowing status:', err);
+        // Set default values if API fails
+        setBorrowingStatus({
+          totalBorrowed: 0,
+          totalReserved: 0,
+          booksRemaining: 3,
+          maxBooksAllowed: 3
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Add a small delay to prevent race conditions
+    setTimeout(() => {
+      fetchBorrowingStatus();
+    }, 100);
+  }, []);
 
   const stats = [
     {
       title: "Borrowed Books",
-      value: `${studentData.borrowedBooks}/${studentData.totalAllowed}`,
+      value: loading ? "Loading..." : `${borrowingStatus?.totalBorrowed || 0}/${borrowingStatus?.maxBooksAllowed || 3}`,
       icon: <FaBook className="text-2xl" />,
       color: "bg-blue-500",
     },
     {
       title: "Account Status",
-      value: "Active",
+      value: membershipStatus?.text || "Pending",
       icon: <FaUser className="text-2xl" />,
-      color: "bg-green-500",
+      color: membershipStatus?.color || "bg-yellow-500",
     },
     {
-      title: "Pending Fines",
-      value: `$${studentData.fineAmount}`,
+      title: "Membership Expires In",
+      value: membershipLeft.text,
       icon: <FaClock className="text-2xl" />,
-      color: "bg-yellow-500",
+      color: getMembershipLeftColor(),
     },
   ];
 
@@ -66,7 +143,7 @@ const StudentDashboardEnhanced = () => {
               isDark ? "text-white" : "text-gray-900"
             } mb-2`}
           >
-            Welcome back, {studentData.name}!
+            Welcome back, {student?.username || student?.name || "User"}!
           </h1>
           {/* Email hidden per requirement */}
         </div>

@@ -82,7 +82,7 @@ const ManageUsers = () => {
       <AdminSidebar />
       <main className="flex-1 px-6 py-3">
         <Navbar />
-        <h1 className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-4">Manage Users</h1>
+        <h1 className="text-3xl font-bold pt-4 text-blue-600 dark:text-white mb-4">Manage Users</h1>
 
         {error && (
           <div className="mb-4 p-3 rounded border border-red-200 bg-red-50 text-red-700">{error}</div>

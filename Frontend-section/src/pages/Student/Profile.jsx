@@ -2,14 +2,17 @@ import React, { useEffect, useState } from "react";
 import StudentSidebar from "@/components/StudentSidebar";
 import StudentNavbar from "@/components/StudentNavbar";
 import Footer from "@/components/Footer";
+import PaymentModal from "@/components/PaymentModal";
 import { authAPI } from "@/services/api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { FaCreditCard, FaExclamationTriangle, FaClock, FaCheckCircle } from "react-icons/fa";
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,7 +20,16 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const { data } = await authAPI.getProfile();
-        if (isMounted) setProfile(data);
+        if (isMounted) {
+          // Check if there's an updated status in localStorage
+          const userData = JSON.parse(localStorage.getItem("user") || "{}");
+          if (userData.membershipStatus && userData.membershipStatus !== data.membershipStatus) {
+            // Use the updated status from localStorage
+            setProfile({ ...data, membershipStatus: userData.membershipStatus });
+          } else {
+            setProfile(data);
+          }
+        }
       } catch (err) {
         if (isMounted) setError(err?.response?.data?.message || "Failed to load profile");
       } finally {
@@ -57,8 +69,114 @@ const Profile = () => {
             </div>
             {profile.membershipStatus && (
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Membership</p>
-                <p className="text-lg font-medium text-gray-900 dark:text-gray-100">{profile.membershipStatus}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Membership Status</p>
+                <div className="flex items-center gap-2">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    profile.membershipStatus === "approved" 
+                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                      : profile.membershipStatus === "pending" || profile.membershipStatus === "waiting_for_approval"
+                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                      : profile.membershipStatus === "canceled"
+                      ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                  }`}>
+                    {profile.membershipStatus === "approved" ? "Active" : 
+                     profile.membershipStatus === "pending" ? "Pending" :
+                     profile.membershipStatus === "waiting_for_approval" ? "Waiting for Approval" :
+                     profile.membershipStatus === "canceled" ? "Inactive" : 
+                     profile.membershipStatus}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Subscription Section for Pending Users */}
+            {profile.membershipStatus === "pending" && (
+              <div className={`p-4 rounded-lg border ${
+                profile.membershipStatus === "pending" 
+                  ? "border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-900/20" 
+                  : "border-gray-200 dark:border-gray-700"
+              }`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <FaExclamationTriangle className="text-orange-600 dark:text-orange-400" />
+                  <h3 className="text-lg font-medium text-orange-800 dark:text-orange-200">
+                    Membership Pending
+                  </h3>
+                </div>
+                <p className="text-sm text-orange-700 dark:text-orange-300 mb-4">
+                  Your membership is currently pending approval. To activate your library membership, 
+                  please subscribe to one of our membership plans.
+                </p>
+                <button
+                  onClick={() => setShowPaymentModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  <FaCreditCard />
+                  Subscribe Now
+                </button>
+              </div>
+            )}
+
+            {/* Waiting for Approval Section */}
+            {profile.membershipStatus === "waiting_for_approval" && (
+              <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <FaClock className="text-blue-600 dark:text-blue-400" />
+                  <h3 className="text-lg font-medium text-blue-800 dark:text-blue-200">
+                    Waiting for Approval
+                  </h3>
+                </div>
+                <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
+                  Your payment proof has been submitted successfully. Your membership is now under review 
+                  by our administrators. You will be notified once it's approved.
+                </p>
+                <div className="text-xs text-blue-600 dark:text-blue-400">
+                  Status: Under Review
+                </div>
+              </div>
+            )}
+
+            {/* Approved Section */}
+            {profile.membershipStatus === "approved" && (
+              <div className="p-4 rounded-lg border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <FaCheckCircle className="text-green-600 dark:text-green-400" />
+                  <h3 className="text-lg font-medium text-green-800 dark:text-green-200">
+                    Membership Approved
+                  </h3>
+                </div>
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  Congratulations! Your membership has been approved. You can now borrow books from the library.
+                </p>
+              </div>
+            )}
+
+            {/* Canceled/Rejected Section */}
+            {profile.membershipStatus === "canceled" && (
+              <div className="p-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <FaExclamationTriangle className="text-red-600 dark:text-red-400" />
+                  <h3 className="text-lg font-medium text-red-800 dark:text-red-200">
+                    Membership Canceled
+                  </h3>
+                </div>
+                <p className="text-sm text-red-700 dark:text-red-300 mb-4">
+                  Your membership application was canceled. You can start the subscription process again.
+                </p>
+                <button
+                  onClick={() => {
+                    // Reset status to pending to allow resubmission
+                    const userData = JSON.parse(localStorage.getItem("user") || "{}");
+                    userData.membershipStatus = "pending";
+                    localStorage.setItem("user", JSON.stringify(userData));
+                    toast.success("Status reset. You can now subscribe again.");
+                    window.location.reload();
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  <FaCreditCard />
+                  Try Again
+                </button>
               </div>
             )}
 
@@ -121,6 +239,12 @@ const Profile = () => {
 
         <Footer />
       </main>
+
+      {/* Payment Modal */}
+      <PaymentModal 
+        isOpen={showPaymentModal} 
+        onClose={() => setShowPaymentModal(false)} 
+      />
     </div>
   );
 };

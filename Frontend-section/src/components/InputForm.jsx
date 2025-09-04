@@ -35,7 +35,7 @@ const InputForm = () => {
   };
 
   return (
-    <div className="w-full max-w-md bg-white bg-opacity-80 rounded-xl shadow-xl p-8 backdrop-blur-md">
+    <div className="w-full max-w-md bg-white bg-opacity-80 rounded-xl  p-2 backdrop-blur-md">
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <div>
           <label

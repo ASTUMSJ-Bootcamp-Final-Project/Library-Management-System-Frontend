@@ -101,7 +101,25 @@ const BookListEnhanced = () => {
       await fetchBorrowingStatus(); // Refresh borrowing status
       toast.success('Book reserved successfully! Please collect it within 24 hours.');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to reserve book');
+      const errorMessage = err.response?.data?.message || 'Failed to reserve book';
+      
+      // Check if it's a membership pending error
+      if (errorMessage.includes('membership is pending')) {
+        toast.error(
+          <div>
+            <p className="font-medium">Membership Required</p>
+            <p className="text-sm mt-1">{errorMessage}</p>
+            <p className="text-sm mt-2">
+              <a href="/student/profile" className="text-blue-600 hover:underline">
+                Go to Profile to Subscribe →
+              </a>
+            </p>
+          </div>,
+          { duration: 6000 }
+        );
+      } else {
+        toast.error(errorMessage);
+      }
       console.error('Error borrowing book:', err);
     } finally {
       setActionLoading(prev => ({ ...prev, [bookId]: false }));

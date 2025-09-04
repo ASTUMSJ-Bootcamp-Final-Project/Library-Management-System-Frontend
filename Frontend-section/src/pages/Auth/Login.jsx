@@ -1,20 +1,12 @@
 import InputForm from "@/components/InputForm";
 import React from "react";
-import booksBg from "../../assets/lib11.jpg";
+import logo from "@/assets/logo.jpg";
 const Login = () => {
   return (
-    <div
-      className="flex items-center justify-center min-h-screen relative"
-      style={{
-        backgroundImage: `url(${booksBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
-      {/* Subtle blue gradient overlay for readability */}
-      {/* <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 via-blue-500/20 to-transparent"></div> */}
-      <div className="relative z-10 flex flex-col items-center text-white bg-opacity-80 rounded-xl shadow-xl p-8 backdrop-blur-md">
-        <h1 className="text-4xl font-bold text-white mb-6 drop-shadow-lg">
+    <div className="flex items-center justify-center min-h-screen bg-white">
+      <div className="flex flex-col items-center rounded-xl shadow-2xl p-8 md:p-5 bg-white max-w-md w-full">
+        <img src={logo} alt="Logo" className="h-12 mb-4 rounded" />
+        <h1 className="mb-6 text-gray-900">
           ASTUMSJ Library Login
         </h1>
         <InputForm />

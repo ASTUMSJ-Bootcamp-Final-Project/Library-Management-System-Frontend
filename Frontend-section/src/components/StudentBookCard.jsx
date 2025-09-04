@@ -50,7 +50,7 @@ const StudentBookCard = ({ book, onBorrow, actionLoading = false, canBorrow = tr
   const getBorrowButtonText = () => {
     if (actionLoading) return "Reserving...";
     if (!canBorrow) {
-      if (borrowingStatus?.booksRemaining === 0) return "Limit Reached";
+      if (borrowingStatus?.booksRemaining === 0) return "Max Limit (3)";
       if (book.availableCopies === 0) return "Out of Stock";
       return "Cannot Borrow";
     }
@@ -197,10 +197,13 @@ const StudentBookCard = ({ book, onBorrow, actionLoading = false, canBorrow = tr
             </div>
           )}
           
-          {borrowingStatus?.booksRemaining === 0 && (
-            <div className="flex items-center space-x-2 text-red-600 text-sm">
+          
+
+          {/* Membership Pending Message */}
+          {!canBorrow && borrowingStatus?.booksRemaining > 0 && !borrowingStatus?.hasOverdueBooks && (
+            <div className="flex items-center space-x-2 text-orange-600 text-sm">
               <FaExclamationTriangle />
-              <span>You have reached the maximum borrowing limit (3 books)</span>
+              <span>Complete your membership subscription to start borrowing books</span>
             </div>
           )}
         </div>

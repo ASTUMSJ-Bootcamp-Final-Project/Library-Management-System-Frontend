@@ -7,6 +7,7 @@ import {
 import { Link, useLocation} from "react-router-dom";
 // Removed ThemeToggle from Navbar to avoid duplication with Sidebar
 import { useTheme } from "@/contexts/ThemeContext";
+import logo from "@/assets/logo.jpg";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -40,15 +41,7 @@ const Navbar = () => {
             to="/admin"
             className="flex items-center space-x-2 text-xl font-bold tracking-tight"
           >
-            <div
-              className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                isDark
-                  ? "bg-blue-600"
-                  : "bg-gradient-to-r from-blue-600 to-blue-400"
-              }`}
-            >
-              <span className="text-white font-bold text-sm">A</span>
-            </div>
+            <img src={logo} alt="Logo" className="w-8 h-8 rounded-full" />
             <span
               className={`hidden sm:block ${
                 isDark ? "text-white" : "text-gray-900"

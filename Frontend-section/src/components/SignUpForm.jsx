@@ -57,17 +57,14 @@ const SignUpForm = () => {
   };
 
   return (
-    <div className="w-full max-w-md bg-white bg-opacity-80 rounded-xl shadow-2xl p-8 backdrop-blur-md">
+    <div className="w-full max-w-md bg-white bg-opacity-80 rounded-xl p-5 backdrop-blur-md">
       <div className="flex flex-col items-center mb-4">
         <img
           src={logo}
           alt="Logo"
           className="w-16 h-16 mb-2 rounded-full shadow"
         />
-        <h2 className="text-3xl font-bold text-blue-900 mb-1">
-          Create Account
-        </h2>
-        <p className="text-black mb-2 text-center">
+        <p className="text-blue-900 text-lg mb-2 text-center">
           Join our library management system
         </p>
       </div>
