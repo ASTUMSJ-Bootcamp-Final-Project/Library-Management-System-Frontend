@@ -4,7 +4,7 @@ import StudentNavbar from "@/components/StudentNavbar";
 import Footer from "@/components/Footer";
 import PaymentModal from "@/components/PaymentModal";
 import PaymentHistory from "@/components/PaymentHistory";
-import { authAPI } from "@/services/api";
+import { authAPI, borrowAPI } from "@/services/api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { FaCreditCard, FaExclamationTriangle, FaClock, FaCheckCircle } from "react-icons/fa";
@@ -14,6 +14,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [borrowingStatus, setBorrowingStatus] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,7 +38,20 @@ const Profile = () => {
         if (isMounted) setLoading(false);
       }
     };
+    const fetchBorrowingStatus = async () => {
+      try {
+        const { data } = await borrowAPI.getUserBorrowingStatus();
+        if (isMounted) {
+          setBorrowingStatus(data);
+        }
+      } catch (err) {
+        // Ignore borrowing status errors, not critical for profile
+        console.error('Error fetching borrowing status:', err);
+      }
+    };
+
     fetchProfile();
+    fetchBorrowingStatus();
     return () => {
       isMounted = false;
     };
@@ -48,7 +62,7 @@ const Profile = () => {
       <StudentSidebar />
       <main className="flex-1 px-6 py-3">
         <StudentNavbar />
-        <h1 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">My Profile</h1>
+        <h1 className="text-2xl font-semibold mt-6 mb-4 text-gray-900 dark:text-gray-100">My Profile</h1>
 
         {loading && (
           <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">Loading...</div>
@@ -183,8 +197,19 @@ const Profile = () => {
 
             <div className="pt-4">
               <button
-                className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white"
-                onClick={() =>
+                className={`px-4 py-2 rounded text-white ${
+                  borrowingStatus && (borrowingStatus.totalBorrowed > 0 || borrowingStatus.totalReserved > 0)
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-red-600 hover:bg-red-700"
+                }`}
+                disabled={borrowingStatus && (borrowingStatus.totalBorrowed > 0 || borrowingStatus.totalReserved > 0)}
+                onClick={() => {
+                  // Check if user has active borrows
+                  if (borrowingStatus && (borrowingStatus.totalBorrowed > 0 || borrowingStatus.totalReserved > 0)) {
+                    toast.error("Cannot delete account. Please return all borrowed books and cancel reservations first.");
+                    return;
+                  }
+
                   toast((t) => {
                     let inputValue = "";
                     return (
@@ -229,11 +254,17 @@ const Profile = () => {
                         </div>
                       </div>
                     );
-                  })
-                }
+                  });
+                }}
               >
                 Delete Account
               </button>
+              {borrowingStatus && (borrowingStatus.totalBorrowed > 0 || borrowingStatus.totalReserved > 0) && (
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                  You cannot delete your account while you have active borrows or reservations. 
+                  Please return all books and cancel reservations first.
+                </p>
+              )}
             </div>
           </div>
         )}

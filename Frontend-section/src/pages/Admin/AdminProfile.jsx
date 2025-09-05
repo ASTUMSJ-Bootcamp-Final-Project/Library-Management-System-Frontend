@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
-import { authAPI } from "@/services/api";
+import { authAPI, borrowAPI } from "@/services/api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -10,6 +10,7 @@ const AdminProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [borrowingStatus, setBorrowingStatus] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,13 +27,32 @@ const AdminProfile = () => {
         if (isMounted) setLoading(false);
       }
     };
+    const fetchBorrowingStatus = async () => {
+      try {
+        const { data } = await borrowAPI.getUserBorrowingStatus();
+        if (isMounted) {
+          setBorrowingStatus(data);
+        }
+      } catch (err) {
+        // Ignore borrowing status errors, not critical for profile
+        console.error('Error fetching borrowing status:', err);
+      }
+    };
+
     fetchProfile();
+    fetchBorrowingStatus();
     return () => {
       isMounted = false;
     };
   }, []);
 
   const handleDeleteAccount = () => {
+    // Check if user has active borrows
+    if (borrowingStatus && (borrowingStatus.totalBorrowed > 0 || borrowingStatus.totalReserved > 0)) {
+      toast.error("Cannot delete account. Please return all borrowed books and cancel reservations first.");
+      return;
+    }
+
     toast((t) => {
       let inputValue = "";
       return (
@@ -85,7 +105,7 @@ const AdminProfile = () => {
       <AdminSidebar />
       <main className="flex-1 px-6 py-3">
         <Navbar />
-        <h1 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">My Profile</h1>
+        <h1 className="text-2xl font-semibold mt-6 mb-4 text-gray-900 dark:text-gray-100">My Profile</h1>
 
         {loading && (
           <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">Loading...</div>
@@ -121,11 +141,22 @@ const AdminProfile = () => {
             {(profile.role !== "superadmin" && profile.username !== "superadmin") && (
               <div className="pt-4">
                 <button
-                  className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white"
+                  className={`px-4 py-2 rounded text-white ${
+                    borrowingStatus && (borrowingStatus.totalBorrowed > 0 || borrowingStatus.totalReserved > 0)
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-700"
+                  }`}
+                  disabled={borrowingStatus && (borrowingStatus.totalBorrowed > 0 || borrowingStatus.totalReserved > 0)}
                   onClick={handleDeleteAccount}
                 >
                   Delete Account
                 </button>
+                {borrowingStatus && (borrowingStatus.totalBorrowed > 0 || borrowingStatus.totalReserved > 0) && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                    You cannot delete your account while you have active borrows or reservations. 
+                    Please return all books and cancel reservations first.
+                  </p>
+                )}
               </div>
             )}
           </div>

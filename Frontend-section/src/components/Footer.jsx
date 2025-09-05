@@ -1,5 +1,5 @@
 import React from "react";
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from "react-icons/fa";
+import { FaFacebook, FaTwitter, FaTelegram, FaHeadset } from "react-icons/fa";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const Footer = () => {
@@ -38,20 +38,21 @@ const Footer = () => {
             <FaTwitter className="text-xl" />
           </a>
           <a
-            href="https://instagram.com"
+            href="https://t.me/ASTU_MSJ"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-blue-600 transition"
           >
-            <FaInstagram className="text-xl" />
+            <FaTelegram className="text-xl" />
           </a>
           <a
-            href="https://linkedin.com"
+            href="https://t.me/ASTUMSJBOT"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-blue-600 transition"
+            title="Support Bot"
           >
-            <FaLinkedin className="text-xl" />
+            <FaHeadset className="text-xl" />
           </a>
         </div>
       </div>

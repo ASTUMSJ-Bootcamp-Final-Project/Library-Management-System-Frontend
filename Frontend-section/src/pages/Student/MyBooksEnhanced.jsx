@@ -3,6 +3,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { FaBook, FaCalendarAlt, FaClock, FaUndo, FaExclamationTriangle, FaCheckCircle, FaTimes } from "react-icons/fa";
 import { borrowAPI, utils } from "@/services/api";
 import toast from "react-hot-toast";
+import UserBorrowingHistory from "@/components/UserBorrowingHistory";
 
 const MyBooksEnhanced = () => {
   const { isDark } = useTheme();
@@ -113,7 +114,7 @@ const MyBooksEnhanced = () => {
                 <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-blue-900"}`}>
                   {borrowingStatus.totalBorrowed}
                 </div>
-                <div className={`text-sm ${isDark ? "text-gray-300" : "text-blue-700"}`}>
+                <div className={`text-sm ${isDark ? "text-gray-300" : "text-blue-700"} text-center`}>
                   Borrowed
                 </div>
               </div>
@@ -127,7 +128,7 @@ const MyBooksEnhanced = () => {
                 <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-yellow-900"}`}>
                   {borrowingStatus.totalReserved}
                 </div>
-                <div className={`text-sm ${isDark ? "text-gray-300" : "text-yellow-700"}`}>
+                <div className={`text-sm ${isDark ? "text-gray-300" : "text-yellow-700"} text-center`}>
                   Reserved
                 </div>
               </div>
@@ -141,7 +142,7 @@ const MyBooksEnhanced = () => {
                 <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-red-900"}`}>
                   {borrowingStatus.overdueBooks}
                 </div>
-                <div className={`text-sm ${isDark ? "text-gray-300" : "text-red-700"}`}>
+                <div className={`text-sm ${isDark ? "text-gray-300" : "text-red-700"} text-center`}>
                   Overdue
                 </div>
               </div>
@@ -155,7 +156,7 @@ const MyBooksEnhanced = () => {
                 <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-green-900"}`}>
                   {borrowingStatus.booksRemaining}
                 </div>
-                <div className={`text-sm ${isDark ? "text-gray-300" : "text-green-700"}`}>
+                <div className={`text-sm ${isDark ? "text-gray-300" : "text-green-700"} text-center`}>
                   Can Borrow
                 </div>
               </div>
@@ -169,8 +170,8 @@ const MyBooksEnhanced = () => {
                 <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-purple-900"}`}>
                   {borrowingStatus.totalReturnRequested || 0}
                 </div>
-                <div className={`text-sm ${isDark ? "text-gray-300" : "text-purple-700"}`}>
-                  Return Requested
+                <div className={`text-sm ${isDark ? "text-gray-300" : "text-purple-700"} text-center`}>
+Return Requested
                 </div>
               </div>
             </div>
@@ -377,6 +378,9 @@ const MyBooksEnhanced = () => {
           </div>
         )}
       </div>
+
+      {/* Borrowing History Section */}
+      <UserBorrowingHistory />
     </div>
   );
 };

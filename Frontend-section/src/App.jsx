@@ -15,35 +15,37 @@ import PrivateRoute from "@/routes/PrivateRoute";
 import { Toaster } from "react-hot-toast";
 import StudentProfile from "./pages/Student/Profile";
 import AdminProfile from "./pages/Admin/AdminProfile";
+import { SidebarProvider } from "@/contexts/SidebarContext";
 
 const App = () => {
   return (
-    <div>
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#363636',
-            color: '#fff',
-          },
-          success: {
-            duration: 3000,
-            iconTheme: {
-              primary: '#4ade80',
-              secondary: '#fff',
-            },
-          },
-          error: {
+    <SidebarProvider>
+      <div>
+        <Toaster 
+          position="top-right"
+          toastOptions={{
             duration: 4000,
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: '#fff',
+            style: {
+              background: '#363636',
+              color: '#fff',
             },
-          },
-        }}
-      />
-      <Routes>
+            success: {
+              duration: 3000,
+              iconTheme: {
+                primary: '#4ade80',
+                secondary: '#fff',
+              },
+            },
+            error: {
+              duration: 4000,
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
+        <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
 
@@ -138,8 +140,9 @@ const App = () => {
             </PrivateRoute>
           }
         />
-      </Routes>
-    </div>
+        </Routes>
+      </div>
+    </SidebarProvider>
   );
 };
 

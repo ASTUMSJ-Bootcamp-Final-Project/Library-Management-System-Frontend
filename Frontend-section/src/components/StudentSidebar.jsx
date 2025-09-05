@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   FaTachometerAlt,
   FaBook,
@@ -7,10 +7,13 @@ import {
   FaBars,
   FaTimes,
   FaHistory,
+  FaChevronLeft,
 } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useSidebar } from "@/contexts/SidebarContext";
+import logo from "@/assets/logo.jpg";
 
 const menuItems = [
   { name: "Dashboard", icon: <FaTachometerAlt />, link: "/student" },
@@ -20,7 +23,7 @@ const menuItems = [
 ];
 
 const StudentSidebar = () => {
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark } = useTheme();
@@ -37,38 +40,60 @@ const StudentSidebar = () => {
     <aside
       className={`h-screen sticky top-0 transition-[width] duration-300 ease-in-out z-40 flex flex-col overflow-hidden ${
         isDark
-          ? "bg-gray-900 border-r border-gray-700 text-white"
+          ? "bg-gray-800 border-r border-gray-700 text-white"
           : "bg-white border-r border-gray-200 text-gray-800"
-      } ${collapsed ? "w-20" : "w-64"}`}
+      } ${collapsed ? "w-16" : "w-64"}`}
     >
       {/* Header */}
       <div
-        className={`flex items-center p-4 border-b ${
+        className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} p-4 border-b ${
           isDark ? "border-gray-700" : "border-gray-200"
         }`}
       >
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className={`p-2 rounded-lg transition-colors ${
-            isDark
-              ? "text-gray-400 hover:text-white hover:bg-gray-800"
-              : "text-gray-600 hover:text-blue-700 hover:bg-gray-100"
-          }`}
-        >
-          {collapsed ? (
-            <FaBars className="text-lg" />
-          ) : (
-            <FaTimes className="text-lg" />
-          )}
-        </button>
-        {!collapsed && (
-          <span
-            className={`ml-3 font-bold text-lg ${
-              isDark ? "text-white" : "text-gray-900"
+        {!collapsed ? (
+          <>
+            <div className="flex items-center space-x-3">
+              {/* Logo */}
+              <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                <img 
+                  src={logo} 
+                  alt="Library Logo" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <span
+                className={`font-bold text-lg ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
+                ASTUMSJ Library
+              </span>
+            </div>
+            
+            {/* Collapse Button */}
+            <button
+              onClick={toggleSidebar}
+              className={`p-1.5 rounded-lg transition-all duration-200 ${
+                isDark
+                  ? "text-gray-400 hover:text-white hover:bg-gray-700"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              }`}
+            >
+              <FaChevronLeft className="text-sm" />
+            </button>
+          </>
+        ) : (
+          /* Collapsed State - Only Hamburger */
+          <button
+            onClick={toggleSidebar}
+            className={`p-2 rounded-lg transition-all duration-200 ${
+              isDark
+                ? "text-gray-400 hover:text-white hover:bg-gray-700"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
             }`}
           >
-            ASTUMSJ LIBRARY
-          </span>
+            <FaBars className="text-lg" />
+          </button>
         )}
       </div>
 
@@ -91,7 +116,11 @@ const StudentSidebar = () => {
               >
                 <span
                   className={`text-lg ${
-                    isActive(item.link) ? "text-white" : ""
+                    isActive(item.link) 
+                      ? isDark 
+                        ? "text-white" 
+                        : "text-blue-700"
+                      : ""
                   }`}
                 >
                   {item.icon}
@@ -111,22 +140,24 @@ const StudentSidebar = () => {
 
       {/* Footer Section */}
       <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="mb-4">
+        <div className={`mb-4 ${collapsed ? 'flex justify-center' : ''}`}>
           <ThemeToggle />
         </div>
-        <button
-          onClick={handleLogout}
-          className={`w-full flex items-center px-4 py-2 rounded-lg transition-all duration-200 ${
-            isDark
-              ? "text-red-400 hover:text-red-300 hover:bg-red-900/30"
-              : "text-red-600 hover:text-red-700 hover:bg-red-100"
-          }`}
-        >
-          <FaSignOutAlt className="text-lg" />
-          {!collapsed && (
-            <span className="ml-3 font-medium text-sm">Logout</span>
-          )}
-        </button>
+        <div className={`${collapsed ? 'flex justify-center' : ''}`}>
+          <button
+            onClick={handleLogout}
+            className={`${collapsed ? 'w-28' : 'w-full'} flex items-center ${collapsed ? 'justify-center' : 'justify-start'} px-4 py-2 rounded-lg transition-all duration-200 ${
+              isDark
+                ? "text-red-400 hover:text-red-300 hover:bg-red-900/30"
+                : "text-red-600 hover:text-red-700 hover:bg-red-100"
+            }`}
+          >
+            <FaSignOutAlt className="text-lg" />
+            {!collapsed && (
+              <span className="ml-3 font-medium text-sm">Logout</span>
+            )}
+          </button>
+        </div>
       </div>
     </aside>
   );

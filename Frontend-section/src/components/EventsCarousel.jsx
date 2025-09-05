@@ -126,29 +126,16 @@ const EventsCarousel = () => {
 
   const nextSlide = () => {
     if (events.length === 0) return;
-    
     setCurrentSlide((prev) => (prev + 1) % events.length);
-    
-    // Pause auto-play temporarily when user interacts
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 4000); // Resume after 4 seconds
   };
 
   const prevSlide = () => {
     if (events.length === 0) return;
-    
     setCurrentSlide((prev) => (prev - 1 + events.length) % events.length);
-    
-    // Pause auto-play temporarily when user interacts
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 4000); // Resume after 4 seconds
   };
 
   const goToSlide = (index) => {
     setCurrentSlide(index);
-    // Pause auto-play temporarily when user interacts
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 4000); // Resume after 4 seconds
   };
 
   // Handle mouse enter/leave for hover pause
@@ -175,9 +162,15 @@ const EventsCarousel = () => {
           {events.map((event, index) => (
             <div key={event.id} className="w-full flex-shrink-0 h-full">
               <div
-                className={`h-full rounded-xl overflow-hidden shadow-lg flex flex-col ${
+                className={`h-full rounded-xl overflow-hidden flex flex-col ${
                   isDark ? "bg-gray-800" : "bg-white"
                 }`}
+                style={{
+                  boxShadow: isDark 
+                    ? '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+                    : '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.1)',
+                  marginBottom: '12px'
+                }}
               >
                 {/* Event Image */}
                 <div className="relative h-32 overflow-hidden flex-shrink-0">
@@ -270,46 +263,28 @@ const EventsCarousel = () => {
         </div>
       </div>
 
-      {/* Auto-play toggle (like admin preview) */}
-      <div className="absolute top-3 right-3">
-        <button
-          onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-          className={`p-1 rounded-full transition-all duration-200 ${
-            isAutoPlaying
-              ? isDark
-                ? "bg-green-600/80 text-white"
-                : "bg-green-600/80 text-white"
-              : isDark
-              ? "bg-gray-600/80 text-gray-300"
-              : "bg-gray-300/80 text-gray-600"
-          }`}
-          title={isAutoPlaying ? "Pause auto-play" : "Resume auto-play"}
-        >
-          <div className={`w-2 h-2 rounded-full ${isAutoPlaying ? "bg-white" : "bg-current"}`} />
-        </button>
-      </div>
 
       {/* Navigation Arrows */}
       <button
         onClick={prevSlide}
-        className={`absolute left-1 top-1/2 transform -translate-y-1/2 p-1 rounded-full transition-all duration-200 ${
+        className={`absolute left-2 top-1/3 transform -translate-y-1/2 p-2 rounded-full transition-all duration-200 ${
           isDark
             ? "bg-gray-800/80 text-white hover:bg-gray-700/80"
             : "bg-white/80 text-gray-600 hover:bg-gray-100/80"
         } shadow-lg backdrop-blur-sm`}
       >
-        <FaChevronLeft size={12} />
+        <FaChevronLeft size={14} />
       </button>
 
       <button
         onClick={nextSlide}
-        className={`absolute right-1 top-1/2 transform -translate-y-1/2 p-1 rounded-full transition-all duration-200 ${
+        className={`absolute right-2 top-1/3 transform -translate-y-1/2 p-2 rounded-full transition-all duration-200 ${
           isDark
             ? "bg-gray-800/80 text-white hover:bg-gray-700/80"
             : "bg-white/80 text-gray-600 hover:bg-gray-100/80"
         } shadow-lg backdrop-blur-sm`}
       >
-        <FaChevronRight size={12} />
+        <FaChevronRight size={14} />
       </button>
 
       {/* Dots Indicator */}

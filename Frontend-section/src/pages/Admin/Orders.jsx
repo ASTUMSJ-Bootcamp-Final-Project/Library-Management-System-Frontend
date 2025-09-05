@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { FaCheck, FaTimes, FaClock, FaExclamationTriangle, FaBook, FaUser, FaCalendarAlt, FaCreditCard, FaEye, FaCheckCircle, FaBan, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaCheck, FaTimes, FaClock, FaExclamationTriangle, FaBook, FaUser, FaCalendarAlt, FaCreditCard, FaEye, FaCheckCircle, FaBan, FaChevronDown, FaChevronUp, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { borrowAPI, utils, paymentAPI } from "@/services/api";
 import toast from "react-hot-toast";
 
@@ -20,6 +20,8 @@ const Orders = () => {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentHistoryPage, setPaymentHistoryPage] = useState(1);
   const [paymentHistoryTotalPages, setPaymentHistoryTotalPages] = useState(1);
+  const [paymentHistory, setPaymentHistory] = useState([]);
+  const [allPaymentHistory, setAllPaymentHistory] = useState([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [borrowPage, setBorrowPage] = useState(1);
   const borrowPageSize = 10;
@@ -27,14 +29,16 @@ const Orders = () => {
   useEffect(() => {
     fetchBorrows();
     fetchPayments();
+    fetchPaymentHistory();
   }, []);
 
-  const fetchPayments = async (page = 1, limit = 10) => {
+  const fetchPayments = async (page = 1, limit = 5) => {
     try {
       setPaymentLoading(true);
       const { data } = await paymentAPI.getAllPayments(page, limit);
       setPayments(data.payments || []);
       setPaymentHistoryTotalPages(data.totalPages || 1);
+      setPaymentHistoryPage(page); // Update the current page state
     } catch (err) {
       console.error('Error fetching payments:', err);
       toast.error(err?.response?.data?.message || 'Failed to fetch payments');
@@ -43,14 +47,61 @@ const Orders = () => {
     }
   };
 
-  const fetchPaymentHistory = async (page = 1, limit = 5) => {
+  const fetchPaymentHistory = async () => {
     try {
-      const { data } = await paymentAPI.getAllPayments(page, limit);
-      return data;
+      setPaymentLoading(true);
+      
+      // Fetch all payments by getting multiple pages
+      let allPayments = [];
+      let currentPage = 1;
+      let hasMorePages = true;
+      
+      while (hasMorePages) {
+        const { data } = await paymentAPI.getAllPayments(currentPage, 50); // Fetch 50 per page
+        const payments = data.payments || [];
+        allPayments = [...allPayments, ...payments];
+        
+        // Check if we have more pages
+        hasMorePages = currentPage < (data.pagination?.totalPages || 1);
+        currentPage++;
+        
+        // Safety break to prevent infinite loops
+        if (currentPage > 20) break;
+      }
+      
+      const historyPayments = allPayments.filter(p => p.status !== 'waiting_for_approval');
+      
+      setAllPaymentHistory(historyPayments);
+      
+      // Calculate pagination
+      const pageSize = 5;
+      const totalPages = Math.max(1, Math.ceil(historyPayments.length / pageSize));
+      setPaymentHistoryTotalPages(totalPages);
+      
+      // Set current page data directly using the fetched data
+      const startIndex = (paymentHistoryPage - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedHistory = historyPayments.slice(startIndex, endIndex);
+      
+      setPaymentHistory(paginatedHistory);
     } catch (err) {
       console.error('Error fetching payment history:', err);
-      throw err;
+      setAllPaymentHistory([]);
+      setPaymentHistory([]);
+      setPaymentHistoryTotalPages(1);
+      setPaymentHistoryPage(1);
+    } finally {
+      setPaymentLoading(false);
     }
+  };
+
+  const updatePaymentHistoryPage = (page) => {
+    const pageSize = 5;
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedHistory = allPaymentHistory.slice(startIndex, endIndex);
+    setPaymentHistory(paginatedHistory);
+    setPaymentHistoryPage(page);
   };
 
   const fetchBorrows = async () => {
@@ -101,7 +152,8 @@ const Orders = () => {
       setActionLoading(prev => ({ ...prev, [paymentId]: true }));
       await paymentAPI.approvePayment(paymentId);
       setPaymentHistoryPage(1); // Reset to first page
-      await fetchPayments(1, 10); // Fetch first page
+      await fetchPayments(1, 5); // Fetch first page
+      await fetchPaymentHistory(); // Refresh payment history
       toast.success('Payment approved successfully!');
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to approve payment');
@@ -116,7 +168,8 @@ const Orders = () => {
       setActionLoading(prev => ({ ...prev, [paymentId]: true }));
       await paymentAPI.rejectPayment(paymentId, 'Rejected by admin');
       setPaymentHistoryPage(1); // Reset to first page
-      await fetchPayments(1, 10); // Fetch first page
+      await fetchPayments(1, 5); // Fetch first page
+      await fetchPaymentHistory(); // Refresh payment history
       toast.success('Payment rejected.');
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to reject payment');
@@ -594,42 +647,40 @@ const Orders = () => {
                       <h3 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Payment History</h3>
                       <div className="flex items-center gap-3">
                         {/* Pagination Controls */}
-                        {isHistoryOpen && paymentHistoryTotalPages > 1 && (
+                        {isHistoryOpen && paymentHistory.length > 0 && (
                           <div className="flex items-center space-x-2">
                             <button
                               onClick={() => {
                                 const newPage = Math.max(1, paymentHistoryPage - 1);
-                                setPaymentHistoryPage(newPage);
-                                fetchPayments(newPage, 10);
+                                updatePaymentHistoryPage(newPage);
                               }}
                               disabled={paymentHistoryPage === 1}
-                              className={`px-3 py-1 text-sm rounded-md ${
+                              className={`px-3 py-1 text-sm rounded ${
                                 paymentHistoryPage === 1
-                                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                                   : isDark
-                                  ? 'bg-gray-700 text-white hover:bg-gray-600'
-                                  : 'bg-white text-gray-700 hover:bg-gray-50'
-                              } border ${isDark ? 'border-gray-600' : 'border-gray-300'}`}
+                                  ? "bg-gray-700 text-white hover:bg-gray-600"
+                                  : "bg-white text-gray-700 hover:bg-gray-50"
+                              } border ${isDark ? "border-gray-600" : "border-gray-300"}`}
                             >
                               Previous
                             </button>
-                            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                            <span className={`text-sm ${isDark ? "text-gray-300" : "text-gray-600"}`}>
                               Page {paymentHistoryPage} of {paymentHistoryTotalPages}
                             </span>
                             <button
                               onClick={() => {
                                 const newPage = Math.min(paymentHistoryTotalPages, paymentHistoryPage + 1);
-                                setPaymentHistoryPage(newPage);
-                                fetchPayments(newPage, 10);
+                                updatePaymentHistoryPage(newPage);
                               }}
                               disabled={paymentHistoryPage === paymentHistoryTotalPages}
-                              className={`px-3 py-1 text-sm rounded-md ${
+                              className={`px-3 py-1 text-sm rounded ${
                                 paymentHistoryPage === paymentHistoryTotalPages
-                                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                                   : isDark
-                                  ? 'bg-gray-700 text-white hover:bg-gray-600'
-                                  : 'bg-white text-gray-700 hover:bg-gray-50'
-                              } border ${isDark ? 'border-gray-600' : 'border-gray-300'}`}
+                                  ? "bg-gray-700 text-white hover:bg-gray-600"
+                                  : "bg-white text-gray-700 hover:bg-gray-50"
+                              } border ${isDark ? "border-gray-600" : "border-gray-300"}`}
                             >
                               Next
                             </button>
@@ -644,58 +695,68 @@ const Orders = () => {
                       </div>
                     </div>
                     {isHistoryOpen && (
-                      <table className="w-full text-sm table-fixed">
-                        <thead className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                          <tr>
-                            <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>User</th>
-                            <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Plan</th>
-                            <th className={`w-1/12 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Amount</th>
-                            <th className={`w-1/12 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Status</th>
-                            <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Submitted</th>
-                            <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Proof</th>
-                          </tr>
-                        </thead>
-                        <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-200'}`}>
-                          {payments.filter(p => p.status !== 'waiting_for_approval').map(payment => (
-                            <tr key={payment._id} className={isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
-                              <td className="px-2 py-3">
-                                <div className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`} title={payment.user?.username || payment.user?.name || 'Unknown'}>{payment.user?.username || payment.user?.name || 'Unknown'}</div>
-                                <div className={`text-xs truncate ${isDark ? 'text-gray-300' : 'text-gray-500'}`} title={payment.user?.email || ''}>{payment.user?.email || ''}</div>
-                              </td>
-                              <td className="px-2 py-3"><div className={`text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`} title={payment.plan}>{payment.plan}</div></td>
-                              <td className="px-2 py-3"><div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.amount} ETB</div></td>
-                              <td className="px-2 py-3">
-                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                  payment.status === 'approved'
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                }`}>
-                                  {payment.status}
-                                </span>
-                              </td>
-                              <td className="px-2 py-3">
-                                <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{new Date(payment.submittedAt).toLocaleDateString()}</div>
-                                <div className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>{new Date(payment.submittedAt).toLocaleTimeString()}</div>
-                              </td>
-                              <td className="px-2 py-3">
-                                {payment?.proof?.url ? (
-                                  <a href={payment.proof.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1">
-                                    <img src={payment.proof.thumbnailUrl || payment.proof.url} alt="Proof" className="w-8 h-8 object-cover rounded border" />
-                                    <span className="text-blue-600 hover:text-blue-800 text-xs font-medium"><FaEye className="inline mr-1" />View</span>
-                                  </a>
-                                ) : (
-                                  <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No proof</span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                          {payments.filter(p => p.status !== 'waiting_for_approval').length === 0 && (
+                      <div>
+                        <table className="w-full text-sm table-fixed">
+                          <thead className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
                             <tr>
-                              <td colSpan={6} className={`px-4 py-6 text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>No history yet</td>
+                              <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>User</th>
+                              <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Plan</th>
+                              <th className={`w-1/12 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Amount</th>
+                              <th className={`w-1/12 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Status</th>
+                              <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Submitted</th>
+                              <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Proof</th>
                             </tr>
-                          )}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-200'}`}>
+                            {paymentHistory.map(payment => (
+                              <tr key={payment._id} className={isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
+                                <td className="px-2 py-3">
+                                  <div className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`} title={payment.user?.username || payment.user?.name || 'Unknown'}>{payment.user?.username || payment.user?.name || 'Unknown'}</div>
+                                  <div className={`text-xs truncate ${isDark ? 'text-gray-300' : 'text-gray-500'}`} title={payment.user?.email || ''}>{payment.user?.email || ''}</div>
+                                </td>
+                                <td className="px-2 py-3"><div className={`text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`} title={payment.plan}>{payment.plan}</div></td>
+                                <td className="px-2 py-3"><div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.amount} ETB</div></td>
+                                <td className="px-2 py-3">
+                                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    payment.status === 'approved'
+                                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                  }`}>
+                                    {payment.status}
+                                  </span>
+                                </td>
+                                <td className="px-2 py-3">
+                                  <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{new Date(payment.submittedAt).toLocaleDateString()}</div>
+                                  <div className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>{new Date(payment.submittedAt).toLocaleTimeString()}</div>
+                                </td>
+                                <td className="px-2 py-3">
+                                  {payment?.proof?.url ? (
+                                    <a href={payment.proof.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1">
+                                      <img src={payment.proof.thumbnailUrl || payment.proof.url} alt="Proof" className="w-8 h-8 object-cover rounded border" />
+                                      <span className="text-blue-600 hover:text-blue-800 text-xs font-medium"><FaEye className="inline mr-1" />View</span>
+                                    </a>
+                                  ) : (
+                                    <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No proof</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                            {paymentHistory.length === 0 && (
+                              <tr>
+                                <td colSpan={6} className={`px-4 py-6 text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>No history yet</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                        {/* Pagination Info */}
+                        {paymentHistory.length > 0 && (
+                          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+                            <div className={`text-sm ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+                              Showing {paymentHistory.length > 0 ? ((paymentHistoryPage - 1) * 5) + 1 : 0} to {Math.min(paymentHistoryPage * 5, allPaymentHistory.length)} of {allPaymentHistory.length} results
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>

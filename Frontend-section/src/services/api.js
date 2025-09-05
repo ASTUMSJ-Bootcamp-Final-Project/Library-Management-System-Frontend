@@ -137,6 +137,10 @@ export const borrowAPI = {
   
   // Cancel a reservation (User only)
   cancelReservation: (borrowId) => api.post('/borrow/cancel-reservation', { borrowId }),
+  
+  // Get user's borrowing history with pagination
+  getUserBorrowingHistory: (page = 1, limit = 10) => 
+    api.get(`/borrow/user-history?page=${page}&limit=${limit}`),
 };
 
 // Users API (Admin only)

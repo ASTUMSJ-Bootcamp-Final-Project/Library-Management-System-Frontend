@@ -34,7 +34,7 @@ const StudentDashboardEnhanced = () => {
       const now = new Date();
       const diffMs = end.getTime() - now.getTime();
       if (diffMs <= 0) return { text: "Expired", isExpired: true };
-      const totalDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       const months = Math.floor(totalDays / 30);
       const days = totalDays % 30;
       if (months > 0 && days > 0) return { text: `${months} mo ${days} d`, isExpired: false };
@@ -159,7 +159,7 @@ const StudentDashboardEnhanced = () => {
         {/* Header Section (under navbar) */}
         <div className="mb-6 pt-6 md:pt-8">
           <h1
-            className={`text-3xl md:text-4xl font-bold ${
+            className={`text-2xl md:text-3xl font-bold ${
               isDark ? "text-white" : "text-gray-900"
             } mb-2`}
           >
@@ -176,7 +176,7 @@ const StudentDashboardEnhanced = () => {
           </div>
 
           {/* Right Side - Account Status and Membership stacked */}
-          <div className="space-y-4">
+          <div className="space-y-4 h-full">
             {/* Account Status */}
             <div
               className={`rounded-xl p-10 ${

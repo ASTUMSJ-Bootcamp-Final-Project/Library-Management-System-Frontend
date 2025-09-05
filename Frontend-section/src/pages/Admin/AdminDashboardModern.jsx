@@ -48,14 +48,14 @@ const quickActions = [
   {
     title: "Add New Book",
     description: "Add a new book to the library collection",
-    icon: <FaPlusCircle className="text-2xl" />,
+    icon: <FaPlusCircle className="text-xl" />,
     link: "/admin/add-book",
     color: "bg-blue-500 hover:bg-blue-600",
   },
   {
     title: "Manage Users",
     description: "View and manage library users and permissions",
-    icon: <FaUsers className="text-2xl" />,
+    icon: <FaUsers className="text-xl" />,
     link: "/admin/users",
     color: "bg-purple-500 hover:bg-purple-600",
   },
@@ -240,14 +240,14 @@ const AdminDashboardModern = () => {
         {/* Header Section */}
         <div className="mb-8 pt-6 md:pt-8">
           <h1
-            className={`text-3xl md:text-4xl font-bold ${
+            className={`text-2xl md:text-3xl font-bold ${
               isDark ? "text-white" : "text-gray-900"
             } mb-2`}
           >
             Welcome to ASTUMSJ Library Admin Dashboard
           </h1>
           <p
-            className={`text-lg ${isDark ? "text-gray-300" : "text-gray-600"}`}
+            className={`text-base ${isDark ? "text-gray-300" : "text-gray-600"}`}
           >
             Manage your library system with ease and efficiency
           </p>
@@ -280,22 +280,22 @@ const AdminDashboardModern = () => {
                     : "bg-white border-gray-200"
                 } border-2 hover:border-blue-500`}
               >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`p-3 rounded-lg ${action.color} text-white`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className={`p-2 rounded-lg ${action.color} text-white`}>
                       {action.icon}
                     </div>
                     <FaArrowRight className="text-gray-400" />
                   </div>
                   <h3
-                    className={`text-lg font-semibold mb-2 ${
+                    className={`text-base font-semibold mb-2 ${
                       isDark ? "text-white" : "text-gray-900"
                     }`}
                   >
                     {action.title}
                   </h3>
                   <p
-                    className={`text-sm ${
+                    className={`text-xs ${
                       isDark ? "text-gray-300" : "text-gray-600"
                     }`}
                   >

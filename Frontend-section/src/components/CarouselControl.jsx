@@ -82,30 +82,30 @@ const CarouselControl = () => {
     return () => { isMounted = false; };
   }, []);
 
-  // Auto-slide functionality for preview mode
+  // Pause on hover functionality
+  const [isHovered, setIsHovered] = useState(false);
+  
+  // Auto-slide functionality for preview mode with hover pause
   useEffect(() => {
-    if (!isCollapsed || !isAutoPlaying) return;
+    if (!isCollapsed || !isAutoPlaying || isHovered) return;
 
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % events.length);
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [isCollapsed, isAutoPlaying, events.length]);
+  }, [isCollapsed, isAutoPlaying, isHovered, events.length]);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % events.length);
-    setIsAutoPlaying(false);
   };
 
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + events.length) % events.length);
-    setIsAutoPlaying(false);
   };
 
   const goToSlide = (index) => {
     setCurrentSlide(index);
-    setIsAutoPlaying(false);
   };
 
   const [editingEvent, setEditingEvent] = useState(null);
@@ -285,12 +285,12 @@ const CarouselControl = () => {
   };
 
   return (
-    <div className={`p-6 rounded-xl shadow-lg h-full flex flex-col ${
+    <div className={`p-6 rounded-xl shadow-2xl h-full flex flex-col ${
       isDark ? "bg-gray-800" : "bg-white"
     }`}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <h3 className={`text-xl font-bold ${
+          <h3 className={`text-lg font-semibold ${
             isDark ? "text-white" : "text-gray-900"
           }`}>
             Post Events
@@ -322,7 +322,11 @@ const CarouselControl = () => {
 
       {isCollapsed ? (
         // Preview Mode - Show carousel like students see
-        <div className="flex-1 relative">
+        <div 
+          className="flex-1 relative"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
           <div className="relative overflow-hidden rounded-xl h-full">
             <div
               className="flex transition-transform duration-500 ease-in-out h-full"
@@ -331,7 +335,7 @@ const CarouselControl = () => {
               {events.map((event, index) => (
                 <div key={event.id} className="w-full flex-shrink-0 h-full">
                   <div
-                    className={`h-full rounded-xl overflow-hidden shadow-lg flex flex-col ${
+                    className={`h-full rounded-xl overflow-hidden shadow-2xl flex flex-col ${
                       isDark ? "bg-gray-700" : "bg-gray-50"
                     }`}
                   >
@@ -429,7 +433,7 @@ const CarouselControl = () => {
           {/* Navigation Arrows for Preview */}
           <button
             onClick={prevSlide}
-            className={`absolute left-1 top-1/2 transform -translate-y-1/2 p-1 rounded-full transition-all duration-200 ${
+            className={`absolute left-2 top-1/4 transform -translate-y-1/2 p-1.5 rounded-full transition-all duration-200 ${
               isDark
                 ? "bg-gray-700/80 text-white hover:bg-gray-600/80"
                 : "bg-white/80 text-gray-600 hover:bg-gray-100/80"
@@ -440,7 +444,7 @@ const CarouselControl = () => {
 
           <button
             onClick={nextSlide}
-            className={`absolute right-1 top-1/2 transform -translate-y-1/2 p-1 rounded-full transition-all duration-200 ${
+            className={`absolute right-2 top-1/4 transform -translate-y-1/2 p-1.5 rounded-full transition-all duration-200 ${
               isDark
                 ? "bg-gray-700/80 text-white hover:bg-gray-600/80"
                 : "bg-white/80 text-gray-600 hover:bg-gray-100/80"
@@ -468,24 +472,6 @@ const CarouselControl = () => {
             ))}
           </div>
 
-          {/* Auto-play indicator for Preview */}
-          <div className="absolute top-3 right-3">
-            <button
-              onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-              className={`p-1 rounded-full transition-all duration-200 ${
-                isAutoPlaying
-                  ? isDark
-                    ? "bg-green-600/80 text-white"
-                    : "bg-green-600/80 text-white"
-                  : isDark
-                  ? "bg-gray-600/80 text-gray-300"
-                  : "bg-gray-300/80 text-gray-600"
-              }`}
-              title={isAutoPlaying ? "Pause auto-play" : "Resume auto-play"}
-            >
-              <div className={`w-2 h-2 rounded-full ${isAutoPlaying ? "bg-white" : "bg-current"}`} />
-            </button>
-          </div>
         </div>
       ) : (
         // Edit Mode - Show compact grid layout
