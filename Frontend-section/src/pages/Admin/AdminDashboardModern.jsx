@@ -70,6 +70,8 @@ const AdminDashboardModern = () => {
   const [users, setUsers] = useState([]);
   const [borrows, setBorrows] = useState([]);
   const [recent, setRecent] = useState([]);
+  const [activityPage, setActivityPage] = useState(1);
+  const activityPageSize = 3;
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -99,14 +101,14 @@ const AdminDashboardModern = () => {
         const borrowsRes = await borrowAPI.getAllBorrows();
         setBorrows(borrowsRes.data || []);
         const recentItems = (borrowsRes.data || [])
-          .slice(0, 6)
           .map((b) => ({
             id: b._id,
             user: b.user?.name || b.user?.username || "Unknown",
             book: b.book?.title || "Unknown",
             status: b.status,
             date: b.updatedAt || b.createdAt,
-          }));
+          }))
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
         setRecent(recentItems);
         anySuccess = true;
       } catch (e) {
@@ -197,6 +199,16 @@ const AdminDashboardModern = () => {
         ),
     }));
   }, [recent]);
+
+  const activityTotalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(recentActivities.length / activityPageSize));
+  }, [recentActivities.length]);
+
+  const paginatedRecentActivities = useMemo(() => {
+    const start = (activityPage - 1) * activityPageSize;
+    const end = start + activityPageSize;
+    return recentActivities.slice(start, end);
+  }, [recentActivities, activityPage]);
 
   const getStatusBadge = (status) => {
     const baseClasses = "px-3 py-1 rounded-full text-xs font-medium";
@@ -390,7 +402,7 @@ const AdminDashboardModern = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentActivities.map((activity, idx) => (
+                {paginatedRecentActivities.map((activity, idx) => (
                   <div
                     key={idx}
                     className={`flex items-center gap-4 p-3 rounded-lg transition-colors ${
@@ -419,6 +431,42 @@ const AdminDashboardModern = () => {
                     </span>
                   </div>
                 ))}
+                {recentActivities.length === 0 && (
+                  <div className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>No recent activity</div>
+                )}
+                {recentActivities.length > 0 && (
+                  <div className="flex items-center justify-between pt-2">
+                    <button
+                      onClick={() => setActivityPage((p) => Math.max(1, p - 1))}
+                      disabled={activityPage === 1}
+                      className={`px-3 py-1 text-sm rounded ${
+                        activityPage === 1
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : isDark
+                          ? "bg-gray-700 text-white hover:bg-gray-600"
+                          : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    <span className={`text-xs ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+                      Page {activityPage} of {activityTotalPages}
+                    </span>
+                    <button
+                      onClick={() => setActivityPage((p) => Math.min(activityTotalPages, p + 1))}
+                      disabled={activityPage === activityTotalPages}
+                      className={`px-3 py-1 text-sm rounded ${
+                        activityPage === activityTotalPages
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : isDark
+                          ? "bg-gray-700 text-white hover:bg-gray-600"
+                          : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
