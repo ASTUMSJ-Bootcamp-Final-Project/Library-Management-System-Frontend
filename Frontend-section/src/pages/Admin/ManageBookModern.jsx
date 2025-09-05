@@ -9,7 +9,6 @@ import {
   FaSearch,
   FaFilter,
   FaSort,
-  FaPlus,
   FaChartBar,
   FaBook,
   FaUsers,
@@ -122,13 +121,6 @@ const ManageBookModern = () => {
   }, [books, search, statusFilter, sortBy, sortOrder]);
 
   const quickActions = [
-    {
-      title: "Add New Book",
-      description: "Add a new book to the library",
-      icon: <FaPlus className="text-2xl" />,
-      onClick: () => navigate("/admin/add-book"),
-      color: "bg-blue-500 hover:bg-blue-600",
-    },
     {
       title: "View Analytics",
       description: "Detailed book analytics and reports",
@@ -303,7 +295,7 @@ const ManageBookModern = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {quickActions.map((action, index) => (
             <div
               key={index}

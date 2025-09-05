@@ -37,6 +37,7 @@ const Bookdetail = () => {
   const [isbn, setIsbn] = useState("");
   const [year, setYear] = useState("");
   const [genre, setGenre] = useState("");
+  const [coverImage, setCoverImage] = useState(null);
 
   // Borrowing history state
   const [borrowHistory, setBorrowHistory] = useState([]);
@@ -136,6 +137,7 @@ const Bookdetail = () => {
         category: genre,
         totalCopies,
         availableCopies,
+        coverImage,
       });
       toast.success("Book updated successfully!");
     } catch (err) {
@@ -343,6 +345,35 @@ const Bookdetail = () => {
                         required
                       />
                     </div>
+                  </div>
+
+                  {/* Cover Image */}
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="coverImage"
+                      className={isDark ? "text-white" : ""}
+                    >
+                      Cover Image
+                    </Label>
+                    <Input
+                      id="coverImage"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files && e.target.files[0];
+                        if (file) {
+                          setCoverImage(file);
+                        }
+                      }}
+                      className={
+                        isDark ? "bg-gray-700 border-gray-600 text-white" : ""
+                      }
+                    />
+                    {coverImage && (
+                      <div className={`text-xs ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+                        Selected: {coverImage.name}
+                      </div>
+                    )}
                   </div>
 
                   {/* Description */}

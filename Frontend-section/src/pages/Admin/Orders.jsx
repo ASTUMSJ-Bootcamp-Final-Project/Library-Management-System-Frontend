@@ -357,7 +357,7 @@ const Orders = () => {
                               <img
                                 src={utils.getBookCoverUrl(book || {})}
                                 alt={book?.title || "Book"}
-                                className="w-10 h-14 object-cover rounded-lg mr-3"
+                                className="w-16 h-24 object-cover rounded-lg mr-3"
                               />
                               <div>
                                 <div className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>

@@ -199,13 +199,7 @@ const StudentBookCard = ({ book, onBorrow, actionLoading = false, canBorrow = tr
           
           
 
-          {/* Membership Pending Message */}
-          {!canBorrow && borrowingStatus?.booksRemaining > 0 && !borrowingStatus?.hasOverdueBooks && (
-            <div className="flex items-center space-x-2 text-orange-600 text-sm">
-              <FaExclamationTriangle />
-              <span>Complete your membership subscription to start borrowing books</span>
-            </div>
-          )}
+          {/* Membership warning removed per request */}
         </div>
       </div>
     </div>

@@ -45,6 +45,14 @@ const PaymentModal = ({ isOpen, onClose }) => {
       await paymentAPI.submitPaymentProof(formData);
 
       toast.success("Payment proof submitted successfully! Your membership is now waiting for approval.");
+      // Optimistically update local storage so UI reflects new status immediately
+      try {
+        const userData = JSON.parse(localStorage.getItem("user") || "{}");
+        userData.membershipStatus = "waiting_for_approval";
+        localStorage.setItem("user", JSON.stringify(userData));
+      } catch (_) {
+        // noop
+      }
       onClose();
       window.location.reload();
     } catch (error) {
