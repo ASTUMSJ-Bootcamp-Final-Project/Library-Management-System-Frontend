@@ -14,6 +14,7 @@ import BrowseBooks from "./pages/Student/BrowseBooks";
 import PrivateRoute from "@/routes/PrivateRoute";
 import { Toaster } from "react-hot-toast";
 import StudentProfile from "./pages/Student/Profile";
+import AdminProfile from "./pages/Admin/AdminProfile";
 
 const App = () => {
   return (
@@ -92,6 +93,14 @@ const App = () => {
           element={
             <PrivateRoute role="admin">
               <Bookdetail />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin/profile"
+          element={
+            <PrivateRoute role="admin">
+              <AdminProfile />
             </PrivateRoute>
           }
         />

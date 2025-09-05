@@ -4,7 +4,7 @@ import {
   FaBars,
   FaTimes,
 } from "react-icons/fa";
-import { Link, useLocation} from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 // Removed ThemeToggle from Navbar to avoid duplication with Sidebar
 import { useTheme } from "@/contexts/ThemeContext";
 import logo from "@/assets/logo.jpg";
@@ -14,7 +14,7 @@ const Navbar = () => {
   const { isDark } = useTheme();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const location = useLocation();
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
 
   const displayName = user.username
@@ -27,15 +27,15 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav
-      className={`w-full sticky top-0 z-50 backdrop-blur-sm border-b transition-all duration-300 ${
-        isDark
-          ? "bg-gray-900/90 border-gray-700 text-white"
-          : "bg-white/90 border-gray-200 text-gray-800"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <nav className="w-full sticky top-0 z-50 ">
+      <div className="max-w-7xl mx-auto">
+        <div
+          className={`flex items-center justify-between h-16 px-6 rounded-full backdrop-blur-md border transition-all duration-300 ${
+            isDark
+              ? "bg-gray-900/30 border-gray-700/50 text-white shadow-lg shadow-gray-900/20"
+              : "bg-white/30 border-gray-200/50 text-gray-800 shadow-lg shadow-gray-200/20"
+          }`}
+        >
           {/* Logo/Brand */}
           <Link
             to="/admin"
@@ -84,17 +84,19 @@ const Navbar = () => {
           <div className="flex items-center space-x-4">
             {/* User profile */}
             <div className="flex items-center space-x-2">
-              <div
+              <button
+                onClick={() => navigate('/admin/profile')}
                 className={`p-2 rounded-full ${
                   isDark ? "bg-gray-800" : "bg-gray-100"
-                }`}
+                } hover:opacity-90 transition-opacity`}
+                title="My Profile"
               >
                 <FaUserCircle
                   className={`text-xl ${
                     isDark ? "text-gray-400" : "text-gray-600"
                   }`}
                 />
-              </div>
+              </button>
               {displayName && (
                 <span
                   className={`hidden lg:block text-sm font-medium ${
@@ -127,24 +129,26 @@ const Navbar = () => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div
-            className={`md:hidden border-t mt-2 py-4 ${
-              isDark ? "border-gray-700" : "border-gray-200"
+            className={`md:hidden mt-4 rounded-2xl backdrop-blur-md border py-4 ${
+              isDark 
+                ? "bg-gray-900/30 border-gray-700/50 shadow-lg shadow-gray-900/20" 
+                : "bg-white/30 border-gray-200/50 shadow-lg shadow-gray-200/20"
             }`}
           >
-            <div className="space-y-2">
+            <div className="space-y-2 px-4">
               {navItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
                   onClick={() => setIsMenuOpen(false)}
-                  className={`flex items-center px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
+                  className={`flex items-center px-4 py-3 rounded-xl text-base font-medium transition-all duration-200 ${
                     isActive(item.path)
                       ? isDark
-                        ? "bg-blue-600 text-white"
-                        : "bg-blue-100 text-blue-700 border border-blue-200"
+                        ? "bg-blue-600/80 text-white"
+                        : "bg-blue-100/80 text-blue-700"
                       : isDark
-                      ? "text-gray-300 hover:text-white hover:bg-gray-800"
-                      : "text-gray-600 hover:text-blue-700 hover:bg-gray-100"
+                      ? "text-gray-300 hover:text-white hover:bg-gray-800/50"
+                      : "text-gray-600 hover:text-blue-700 hover:bg-gray-100/50"
                   }`}
                 >
                   {item.icon}

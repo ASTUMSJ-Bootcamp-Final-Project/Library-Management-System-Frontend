@@ -3,6 +3,7 @@ import StudentSidebar from "@/components/StudentSidebar";
 import StudentNavbar from "@/components/StudentNavbar";
 import Footer from "@/components/Footer";
 import PaymentModal from "@/components/PaymentModal";
+import PaymentHistory from "@/components/PaymentHistory";
 import { authAPI } from "@/services/api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -234,6 +235,13 @@ const Profile = () => {
                 Delete Account
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Payment History Section */}
+        {!loading && !error && (
+          <div className="mt-6">
+            <PaymentHistory />
           </div>
         )}
 

@@ -4,9 +4,10 @@ import StudentNavbar from "@/components/StudentNavbar";
 import Footer from "@/components/Footer";
 import BookList from "./BookListEnhanced";
 import MyBooks from "./MyBooksEnhanced";
+import EventsCarousel from "@/components/EventsCarousel";
 import { useTheme } from "@/contexts/ThemeContext";
 import { FaBook, FaUser, FaClock, FaSearch } from "react-icons/fa";
-import { borrowAPI } from "@/services/api";
+import { borrowAPI, authAPI } from "@/services/api";
 
 const StudentDashboardEnhanced = () => {
   const { isDark } = useTheme();
@@ -15,12 +16,12 @@ const StudentDashboardEnhanced = () => {
   const [loading, setLoading] = useState(true);
 
   const data = localStorage.getItem("user");
-  const student = data ? JSON.parse(data) : {};
+  const [studentProfile, setStudentProfile] = useState(data ? JSON.parse(data) : {});
   
   // Resolve membership end date: only use membershipExpiryDate
   const getMembershipEndDate = () => {
-    if (student && student.membershipExpiryDate) {
-      const d = new Date(student.membershipExpiryDate);
+    if (studentProfile && studentProfile.membershipExpiryDate) {
+      const d = new Date(studentProfile.membershipExpiryDate);
       if (!isNaN(d.getTime())) return d;
     }
     return null;
@@ -61,7 +62,7 @@ const StudentDashboardEnhanced = () => {
   // Get membership status with proper color mapping
   const getMembershipStatus = () => {
     try {
-      const status = student?.membershipStatus || "pending";
+      const status = studentProfile?.membershipStatus || "pending";
       switch (status) {
         case "approved":
           return { text: "Active", color: "bg-green-500" };
@@ -80,6 +81,25 @@ const StudentDashboardEnhanced = () => {
   };
 
   const membershipStatus = getMembershipStatus();
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchProfile = async () => {
+      try {
+        const { data: profile } = await authAPI.getProfile();
+        if (!isMounted) return;
+        setStudentProfile(prev => {
+          const merged = { ...prev, ...profile };
+          try { localStorage.setItem('user', JSON.stringify(merged)); } catch {}
+          return merged;
+        });
+      } catch (e) {
+        // ignore, fallback to localStorage
+      }
+    };
+    fetchProfile();
+    return () => { isMounted = false; };
+  }, []);
 
   useEffect(() => {
     const fetchBorrowingStatus = async () => {
@@ -143,17 +163,23 @@ const StudentDashboardEnhanced = () => {
               isDark ? "text-white" : "text-gray-900"
             } mb-2`}
           >
-            Welcome back, {student?.username || student?.name || "User"}!
+            Welcome back, {studentProfile?.username || studentProfile?.name || "User"}!
           </h1>
           {/* Email hidden per requirement */}
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {stats.map((stat, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Left Side - Events Carousel */}
+          <div className="h-full">
+            <EventsCarousel />
+          </div>
+
+          {/* Right Side - Account Status and Membership stacked */}
+          <div className="space-y-4">
+            {/* Account Status */}
             <div
-              key={index}
-              className={`rounded-xl p-6 ${
+              className={`rounded-xl p-10 ${
                 isDark ? "bg-gray-800" : "bg-white"
               } shadow-lg`}
             >
@@ -164,22 +190,51 @@ const StudentDashboardEnhanced = () => {
                       isDark ? "text-gray-400" : "text-gray-600"
                     }`}
                   >
-                    {stat.title}
+                    {stats[1].title}
                   </p>
                   <p
                     className={`text-2xl font-bold ${
                       isDark ? "text-white" : "text-gray-900"
                     }`}
                   >
-                    {stat.value}
+                    {stats[1].value}
                   </p>
                 </div>
-                <div className={`p-3 rounded-lg ${stat.color} text-white`}>
-                  {stat.icon}
+                <div className={`p-3 rounded-lg ${stats[1].color} text-white`}>
+                  {stats[1].icon}
                 </div>
               </div>
             </div>
-          ))}
+
+            {/* Membership Expires In */}
+            <div
+              className={`rounded-xl p-10 ${
+                isDark ? "bg-gray-800" : "bg-white"
+              } shadow-lg`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p
+                    className={`text-sm ${
+                      isDark ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    {stats[2].title}
+                  </p>
+                  <p
+                    className={`text-2xl font-bold ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {stats[2].value}
+                  </p>
+                </div>
+                <div className={`p-3 rounded-lg ${stats[2].color} text-white`}>
+                  {stats[2].icon}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Navigation Tabs */}

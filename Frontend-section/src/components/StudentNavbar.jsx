@@ -21,14 +21,15 @@ const StudentNavbar = () => {
   };
 
   return (
-    <nav
-      className={`sticky top-0 z-30 p-4 border-b ${
-        isDark
-          ? "bg-gray-800 border-gray-700 text-white"
-          : "bg-white border-gray-200 text-gray-800"
-      } shadow-sm`}
-    >
-      <div className="flex items-center justify-between">
+    <nav className="w-full sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto">
+        <div
+          className={`flex items-center justify-between h-16 px-6 rounded-full backdrop-blur-md border transition-all duration-300 ${
+            isDark
+              ? "bg-gray-900/30 border-gray-700/50 text-white shadow-lg shadow-gray-900/20"
+              : "bg-white/30 border-gray-200/50 text-gray-800 shadow-lg shadow-gray-200/20"
+          }`}
+        >
         {/* Logo */}
         <div className="flex items-center gap-3 mr-4">
           <img src={logo} alt="Logo" className="w-8 h-8 rounded-full" />
@@ -67,6 +68,7 @@ const StudentNavbar = () => {
             </div>
             {/* Logout button removed to keep it only in the sidebar */}
           </div>
+        </div>
         </div>
       </div>
     </nav>

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { FaTimes, FaUpload, FaCreditCard, FaCheckCircle } from "react-icons/fa";
 import toast from "react-hot-toast";
+import { paymentAPI } from "@/services/api";
 
 const PaymentModal = ({ isOpen, onClose }) => {
   const { isDark } = useTheme();
@@ -36,38 +37,18 @@ const PaymentModal = ({ isOpen, onClose }) => {
 
     setIsSubmitting(true);
     try {
-      // Here you would typically send the data to your backend
-      // For now, we'll simulate updating the user's status to "waiting_for_approval"
-      
-      // Update local storage to reflect the new status
-      const userData = JSON.parse(localStorage.getItem("user") || "{}");
-      userData.membershipStatus = "waiting_for_approval";
-      userData.subscriptionPlan = selectedPlanData.name;
-      userData.subscriptionAmount = selectedPlanData.price;
-      userData.paymentSubmittedAt = new Date().toISOString();
-      userData.paymentProof = paymentProof.name; // Store filename
-      localStorage.setItem("user", JSON.stringify(userData));
+      const formData = new FormData();
+      formData.append("plan", selectedPlanData.name);
+      formData.append("amount", String(selectedPlanData.price));
+      formData.append("paymentProof", paymentProof);
 
-      // Also store in allUsers array for admin to see
-      const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
-      const existingUserIndex = allUsers.findIndex(u => u.id === userData.id || u._id === userData._id);
-      if (existingUserIndex >= 0) {
-        allUsers[existingUserIndex] = { ...allUsers[existingUserIndex], ...userData };
-      } else {
-        allUsers.push(userData);
-      }
-      localStorage.setItem('allUsers', JSON.stringify(allUsers));
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await paymentAPI.submitPaymentProof(formData);
+
       toast.success("Payment proof submitted successfully! Your membership is now waiting for approval.");
       onClose();
-      
-      // Refresh the page to show updated status
       window.location.reload();
     } catch (error) {
-      toast.error("Failed to submit payment proof. Please try again.");
+      toast.error(error?.response?.data?.message || "Failed to submit payment proof. Please try again.");
       setIsSubmitting(false);
     }
   };

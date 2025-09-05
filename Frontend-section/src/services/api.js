@@ -152,6 +152,62 @@ export const usersAPI = {
     api.put(`/users/membership/${userId}`, { membershipStatus }),
 };
 
+// Payment API
+export const paymentAPI = {
+  // Get user's payment history
+  getPaymentHistory: (page = 1, limit = 5) => 
+    api.get(`/payments/history?page=${page}&limit=${limit}`),
+  
+  // Submit payment proof
+  submitPaymentProof: (paymentData) =>
+    api.post('/payments/submit', paymentData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  
+  // Get all payments (Admin only)
+  getAllPayments: (page = 1, limit = 10) => 
+    api.get(`/payments?page=${page}&limit=${limit}`),
+  
+  // Approve payment (Admin only)
+  approvePayment: (paymentId) => api.post(`/payments/${paymentId}/approve`),
+  
+  // Reject payment (Admin only)
+  rejectPayment: (paymentId, reason) => api.post(`/payments/${paymentId}/reject`, { reason }),
+};
+
+// Events API
+export const eventsAPI = {
+  list: () => api.get('/events'),
+  create: (eventData) => {
+    const formData = new FormData();
+    Object.entries(eventData).forEach(([key, value]) => {
+      if (key !== 'image' && value !== undefined && value !== null) {
+        formData.append(key, value);
+      }
+    });
+    if (eventData.image) {
+      formData.append('image', eventData.image);
+    }
+    return api.post('/events', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  update: (id, eventData) => {
+    const formData = new FormData();
+    Object.entries(eventData).forEach(([key, value]) => {
+      if (key !== 'image' && value !== undefined && value !== null) {
+        formData.append(key, value);
+      }
+    });
+    if (eventData.image) {
+      formData.append('image', eventData.image);
+    }
+    return api.put(`/events/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+};
+
 // Reminder API (Admin only)
 export const reminderAPI = {
   getStatus: () => api.get('/reminders/status'),

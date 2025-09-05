@@ -41,6 +41,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { booksAPI, usersAPI, borrowAPI } from "@/services/api";
 import BorrowingHistory from "@/components/BorrowingHistory";
+import CarouselControl from "@/components/CarouselControl";
 // Live dashboard data
 
 const quickActions = [
@@ -50,13 +51,6 @@ const quickActions = [
     icon: <FaPlusCircle className="text-2xl" />,
     link: "/admin/add-book",
     color: "bg-blue-500 hover:bg-blue-600",
-  },
-  {
-    title: "View Analytics",
-    description: "Check detailed library analytics and reports",
-    icon: <FaChartLine className="text-2xl" />,
-    link: "/admin/orders",
-    color: "bg-green-500 hover:bg-green-600",
   },
   {
     title: "Manage Users",
@@ -256,41 +250,49 @@ const AdminDashboardModern = () => {
         )}
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {quickActions.map((action, index) => (
-            <Card
-              key={index}
-              onClick={() => navigate(action.link)}
-              className={`shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer ${
-                isDark
-                  ? "bg-gray-800 border-gray-700"
-                  : "bg-white border-gray-200"
-              } border-2 hover:border-blue-500`}
-            >
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 rounded-lg ${action.color} text-white`}>
-                    {action.icon}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Events Carousel Control - Left Side */}
+          <div className="h-full">
+            <CarouselControl />
+          </div>
+          
+          {/* Right Side - Stacked Cards */}
+          <div className="space-y-4">
+            {quickActions.map((action, index) => (
+              <Card
+                key={index}
+                onClick={() => navigate(action.link)}
+                className={`shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer ${
+                  isDark
+                    ? "bg-gray-800 border-gray-700"
+                    : "bg-white border-gray-200"
+                } border-2 hover:border-blue-500`}
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`p-3 rounded-lg ${action.color} text-white`}>
+                      {action.icon}
+                    </div>
+                    <FaArrowRight className="text-gray-400" />
                   </div>
-                  <FaArrowRight className="text-gray-400" />
-                </div>
-                <h3
-                  className={`text-lg font-semibold mb-2 ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  {action.title}
-                </h3>
-                <p
-                  className={`text-sm ${
-                    isDark ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  {action.description}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+                  <h3
+                    className={`text-lg font-semibold mb-2 ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {action.title}
+                  </h3>
+                  <p
+                    className={`text-sm ${
+                      isDark ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    {action.description}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
 
         {/* Stats Cards */}

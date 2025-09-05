@@ -3,8 +3,8 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { FaCheck, FaTimes, FaClock, FaExclamationTriangle, FaBook, FaUser, FaCalendarAlt, FaCreditCard, FaEye, FaCheckCircle, FaBan } from "react-icons/fa";
-import { borrowAPI, utils } from "@/services/api";
+import { FaCheck, FaTimes, FaClock, FaExclamationTriangle, FaBook, FaUser, FaCalendarAlt, FaCreditCard, FaEye, FaCheckCircle, FaBan, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { borrowAPI, utils, paymentAPI } from "@/services/api";
 import toast from "react-hot-toast";
 
 const Orders = () => {
@@ -16,36 +16,38 @@ const Orders = () => {
   const [filter, setFilter] = useState('all'); // all, pending, borrowed, returned, overdue
   const [activeTab, setActiveTab] = useState('borrowings'); // borrowings, payments
   const [payments, setPayments] = useState([]);
+  const [paymentFilter, setPaymentFilter] = useState('all'); // all, waiting_for_approval, approved, rejected
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentHistoryPage, setPaymentHistoryPage] = useState(1);
+  const [paymentHistoryTotalPages, setPaymentHistoryTotalPages] = useState(1);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   useEffect(() => {
     fetchBorrows();
     fetchPayments();
   }, []);
 
-  const fetchPayments = async () => {
+  const fetchPayments = async (page = 1, limit = 10) => {
     try {
       setPaymentLoading(true);
-      // For now, we'll simulate fetching payments from localStorage
-      // In a real app, this would be an API call
-      const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
-      const pendingPayments = allUsers.filter(user => 
-        user.membershipStatus === 'waiting_for_approval'
-      ).map(user => ({
-        id: user._id || user.id,
-        username: user.username,
-        email: user.email,
-        plan: user.subscriptionPlan || '3 Months',
-        amount: user.subscriptionAmount || 300,
-        submittedAt: user.paymentSubmittedAt || new Date().toISOString(),
-        paymentProof: user.paymentProof || null,
-        status: 'waiting_for_approval'
-      }));
-      setPayments(pendingPayments);
+      const { data } = await paymentAPI.getAllPayments(page, limit);
+      setPayments(data.payments || []);
+      setPaymentHistoryTotalPages(data.totalPages || 1);
     } catch (err) {
       console.error('Error fetching payments:', err);
+      toast.error(err?.response?.data?.message || 'Failed to fetch payments');
     } finally {
       setPaymentLoading(false);
+    }
+  };
+
+  const fetchPaymentHistory = async (page = 1, limit = 5) => {
+    try {
+      const { data } = await paymentAPI.getAllPayments(page, limit);
+      return data;
+    } catch (err) {
+      console.error('Error fetching payment history:', err);
+      throw err;
     }
   };
 
@@ -95,27 +97,12 @@ const Orders = () => {
   const handleApprovePayment = async (paymentId) => {
     try {
       setActionLoading(prev => ({ ...prev, [paymentId]: true }));
-      
-      // Update user status to approved
-      const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
-      const updatedUsers = allUsers.map(user => 
-        user.id === paymentId || user._id === paymentId
-          ? { ...user, membershipStatus: 'approved' }
-          : user
-      );
-      localStorage.setItem('allUsers', JSON.stringify(updatedUsers));
-      
-      // Also update the current user if it's them
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      if (currentUser.id === paymentId || currentUser._id === paymentId) {
-        currentUser.membershipStatus = 'approved';
-        localStorage.setItem('user', JSON.stringify(currentUser));
-      }
-      
-      await fetchPayments(); // Refresh payments list
-      toast.success('Payment approved successfully! User membership is now active.');
+      await paymentAPI.approvePayment(paymentId);
+      setPaymentHistoryPage(1); // Reset to first page
+      await fetchPayments(1, 10); // Fetch first page
+      toast.success('Payment approved successfully!');
     } catch (err) {
-      toast.error('Failed to approve payment');
+      toast.error(err?.response?.data?.message || 'Failed to approve payment');
       console.error('Error approving payment:', err);
     } finally {
       setActionLoading(prev => ({ ...prev, [paymentId]: false }));
@@ -125,31 +112,66 @@ const Orders = () => {
   const handleRejectPayment = async (paymentId) => {
     try {
       setActionLoading(prev => ({ ...prev, [paymentId]: true }));
-      
-      // Update user status to canceled
-      const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
-      const updatedUsers = allUsers.map(user => 
-        user.id === paymentId || user._id === paymentId
-          ? { ...user, membershipStatus: 'canceled' }
-          : user
-      );
-      localStorage.setItem('allUsers', JSON.stringify(updatedUsers));
-      
-      // Also update the current user if it's them
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      if (currentUser.id === paymentId || currentUser._id === paymentId) {
-        currentUser.membershipStatus = 'canceled';
-        localStorage.setItem('user', JSON.stringify(currentUser));
-      }
-      
-      await fetchPayments(); // Refresh payments list
-      toast.success('Payment rejected. User can resubmit their application.');
+      await paymentAPI.rejectPayment(paymentId, 'Rejected by admin');
+      setPaymentHistoryPage(1); // Reset to first page
+      await fetchPayments(1, 10); // Fetch first page
+      toast.success('Payment rejected.');
     } catch (err) {
-      toast.error('Failed to reject payment');
+      toast.error(err?.response?.data?.message || 'Failed to reject payment');
       console.error('Error rejecting payment:', err);
     } finally {
       setActionLoading(prev => ({ ...prev, [paymentId]: false }));
     }
+  };
+
+  const confirmApprovePayment = (payment) => {
+    toast((t) => (
+      <div>
+        <p className="mb-2">Approve payment for <strong>{payment.user?.username || payment.user?.email || 'user'}</strong>?</p>
+        <div className="flex gap-2">
+          <button
+            className="px-3 py-1 text-sm rounded bg-green-600 hover:bg-green-700 text-white"
+            onClick={async () => {
+              toast.dismiss(t.id);
+              await handleApprovePayment(payment._id);
+            }}
+          >
+            Confirm
+          </button>
+          <button
+            className="px-3 py-1 text-sm rounded bg-gray-200 hover:bg-gray-300 text-gray-800"
+            onClick={() => toast.dismiss(t.id)}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ));
+  };
+
+  const confirmRejectPayment = (payment) => {
+    toast((t) => (
+      <div>
+        <p className="mb-2">Reject payment for <strong>{payment.user?.username || payment.user?.email || 'user'}</strong>?</p>
+        <div className="flex gap-2">
+          <button
+            className="px-3 py-1 text-sm rounded bg-red-600 hover:bg-red-700 text-white"
+            onClick={async () => {
+              toast.dismiss(t.id);
+              await handleRejectPayment(payment._id);
+            }}
+          >
+            Confirm
+          </button>
+          <button
+            className="px-3 py-1 text-sm rounded bg-gray-200 hover:bg-gray-300 text-gray-800"
+            onClick={() => toast.dismiss(t.id)}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ));
   };
 
   const filteredBorrows = borrows.filter(borrow => {
@@ -253,11 +275,11 @@ const Orders = () => {
               >
                 <FaCreditCard className="inline mr-2" />
                 Membership Payments
-                {payments.length > 0 && (
+                {payments.filter(p => p.status === 'waiting_for_approval').length > 0 && (
                   <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
                     isDark ? "bg-orange-600 text-white" : "bg-orange-100 text-orange-800"
                   }`}>
-                    {payments.length}
+                    {payments.filter(p => p.status === 'waiting_for_approval').length}
                   </span>
                 )}
               </button>
@@ -460,113 +482,174 @@ const Orders = () => {
                 </div>
               ) : payments.length > 0 ? (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className={`${isDark ? "bg-gray-700" : "bg-gray-50"}`}>
-                      <tr>
-                        <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-500"}`}>
-                          User
-                        </th>
-                        <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-500"}`}>
-                          Subscription Plan
-                        </th>
-                        <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-500"}`}>
-                          Amount
-                        </th>
-                        <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-500"}`}>
-                          Submitted
-                        </th>
-                        <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-500"}`}>
-                          Payment Proof
-                        </th>
-                        <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-500"}`}>
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className={`divide-y ${isDark ? "divide-gray-700" : "divide-gray-200"}`}>
-                      {payments.map((payment) => (
-                        <tr key={payment.id} className={isDark ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <div className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
-                              {payment.username}
-                            </div>
-                            <div className={`text-xs ${isDark ? "text-gray-300" : "text-gray-500"}`}>
-                              {payment.email}
-                            </div>
-                          </td>
-                          
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <div className={`text-sm ${isDark ? "text-white" : "text-gray-900"}`}>
-                              {payment.plan}
-                            </div>
-                          </td>
-                          
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <div className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
-                              {payment.amount} ETB
-                            </div>
-                          </td>
-                          
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <div className={`text-xs ${isDark ? "text-gray-300" : "text-gray-500"}`}>
-                              {new Date(payment.submittedAt).toLocaleDateString()}
-                            </div>
-                            <div className={`text-[10px] ${isDark ? "text-gray-400" : "text-gray-400"}`}>
-                              {new Date(payment.submittedAt).toLocaleTimeString()}
-                            </div>
-                          </td>
-                          
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            {payment.paymentProof ? (
-                              <button
-                                onClick={() => {
-                                  // In a real app, this would open the payment proof image
-                                  toast.info("Payment proof available - would open in modal");
-                                }}
-                                className="text-blue-600 hover:text-blue-800 text-xs font-medium"
-                              >
-                                <FaEye className="inline mr-1" />
-                                View Proof
-                              </button>
-                            ) : (
-                              <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                                No proof uploaded
-                              </span>
-                            )}
-                          </td>
-                          
-                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => handleApprovePayment(payment.id)}
-                                disabled={actionLoading[payment.id]}
-                                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                                  actionLoading[payment.id]
-                                    ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                                    : "bg-green-600 hover:bg-green-700 text-white"
-                                }`}
-                              >
-                                <FaCheckCircle className="inline mr-1" />
-                                {actionLoading[payment.id] ? "Processing..." : "Approve"}
-                              </button>
-                              <button
-                                onClick={() => handleRejectPayment(payment.id)}
-                                disabled={actionLoading[payment.id]}
-                                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                                  actionLoading[payment.id]
-                                    ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                                    : "bg-red-600 hover:bg-red-700 text-white"
-                                }`}
-                              >
-                                <FaBan className="inline mr-1" />
-                                {actionLoading[payment.id] ? "Processing..." : "Reject"}
-                              </button>
-                            </div>
-                          </td>
+                  {/* Pending Approvals (with actions) */}
+                  <div className="p-4">
+                    <h3 className={`text-base font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Pending Approvals</h3>
+                    <table className="w-full text-sm">
+                      <thead className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                        <tr>
+                          <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>User</th>
+                          <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Subscription Plan</th>
+                          <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Amount</th>
+                          <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Submitted</th>
+                          <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Payment Proof</th>
+                          <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-200'}`}>
+                        {payments.filter(p => p.status === 'waiting_for_approval').map(payment => (
+                          <tr key={payment._id} className={isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.user?.username || payment.user?.name || 'Unknown'}</div>
+                              <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{payment.user?.email || ''}</div>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap"><div className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.plan}</div></td>
+                            <td className="px-4 py-3 whitespace-nowrap"><div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.amount} ETB</div></td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{new Date(payment.submittedAt).toLocaleDateString()}</div>
+                              <div className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>{new Date(payment.submittedAt).toLocaleTimeString()}</div>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              {payment?.proof?.url ? (
+                                <a href={payment.proof.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2">
+                                  <img src={payment.proof.thumbnailUrl || payment.proof.url} alt="Proof" className="w-12 h-12 object-cover rounded border" />
+                                  <span className="text-blue-600 hover:text-blue-800 text-xs font-medium"><FaEye className="inline mr-1" />Open</span>
+                                </a>
+                              ) : (
+                                <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No proof uploaded</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                              <div className="flex space-x-2">
+                                <button onClick={() => confirmApprovePayment(payment)} disabled={actionLoading[payment._id]} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${actionLoading[payment._id] ? 'bg-gray-400 text-gray-200 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white'}`}>
+                                  <FaCheckCircle className="inline mr-1" />{actionLoading[payment._id] ? 'Processing...' : 'Approve'}
+                                </button>
+                                <button onClick={() => confirmRejectPayment(payment)} disabled={actionLoading[payment._id]} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${actionLoading[payment._id] ? 'bg-gray-400 text-gray-200 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700 text-white'}`}>
+                                  <FaBan className="inline mr-1" />{actionLoading[payment._id] ? 'Processing...' : 'Reject'}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {payments.filter(p => p.status === 'waiting_for_approval').length === 0 && (
+                          <tr>
+                            <td colSpan={6} className={`px-4 py-6 text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>No pending payments</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Payment History (no actions) */}
+                  <div className="p-4 pt-0">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Payment History</h3>
+                      <div className="flex items-center gap-3">
+                        {/* Pagination Controls */}
+                        {isHistoryOpen && paymentHistoryTotalPages > 1 && (
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => {
+                                const newPage = Math.max(1, paymentHistoryPage - 1);
+                                setPaymentHistoryPage(newPage);
+                                fetchPayments(newPage, 10);
+                              }}
+                              disabled={paymentHistoryPage === 1}
+                              className={`px-3 py-1 text-sm rounded-md ${
+                                paymentHistoryPage === 1
+                                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                  : isDark
+                                  ? 'bg-gray-700 text-white hover:bg-gray-600'
+                                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                              } border ${isDark ? 'border-gray-600' : 'border-gray-300'}`}
+                            >
+                              Previous
+                            </button>
+                            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                              Page {paymentHistoryPage} of {paymentHistoryTotalPages}
+                            </span>
+                            <button
+                              onClick={() => {
+                                const newPage = Math.min(paymentHistoryTotalPages, paymentHistoryPage + 1);
+                                setPaymentHistoryPage(newPage);
+                                fetchPayments(newPage, 10);
+                              }}
+                              disabled={paymentHistoryPage === paymentHistoryTotalPages}
+                              className={`px-3 py-1 text-sm rounded-md ${
+                                paymentHistoryPage === paymentHistoryTotalPages
+                                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                  : isDark
+                                  ? 'bg-gray-700 text-white hover:bg-gray-600'
+                                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                              } border ${isDark ? 'border-gray-600' : 'border-gray-300'}`}
+                            >
+                              Next
+                            </button>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => setIsHistoryOpen((prev) => !prev)}
+                          className={`px-3 py-1 text-sm rounded-md flex items-center gap-2 ${isDark ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-700 hover:bg-gray-50'} border ${isDark ? 'border-gray-600' : 'border-gray-300'}`}
+                        >
+                          {isHistoryOpen ? (<><FaChevronDown /> Hide</>) : (<><FaChevronUp /> Show</>)}
+                        </button>
+                      </div>
+                    </div>
+                    {isHistoryOpen && (
+                      <table className="w-full text-sm">
+                        <thead className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                          <tr>
+                            <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>User</th>
+                            <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Subscription Plan</th>
+                            <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Amount</th>
+                            <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Status</th>
+                            <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Submitted</th>
+                            <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Payment Proof</th>
+                          </tr>
+                        </thead>
+                        <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-200'}`}>
+                          {payments.filter(p => p.status !== 'waiting_for_approval').map(payment => (
+                            <tr key={payment._id} className={isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.user?.username || payment.user?.name || 'Unknown'}</div>
+                                <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{payment.user?.email || ''}</div>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap"><div className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.plan}</div></td>
+                              <td className="px-4 py-3 whitespace-nowrap"><div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.amount} ETB</div></td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  payment.status === 'approved'
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                }`}>
+                                  {payment.status}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{new Date(payment.submittedAt).toLocaleDateString()}</div>
+                                <div className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>{new Date(payment.submittedAt).toLocaleTimeString()}</div>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                {payment?.proof?.url ? (
+                                  <a href={payment.proof.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2">
+                                    <img src={payment.proof.thumbnailUrl || payment.proof.url} alt="Proof" className="w-12 h-12 object-cover rounded border" />
+                                    <span className="text-blue-600 hover:text-blue-800 text-xs font-medium"><FaEye className="inline mr-1" />Open</span>
+                                  </a>
+                                ) : (
+                                  <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No proof uploaded</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                          {payments.filter(p => p.status !== 'waiting_for_approval').length === 0 && (
+                            <tr>
+                              <td colSpan={6} className={`px-4 py-6 text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>No history yet</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-12">
