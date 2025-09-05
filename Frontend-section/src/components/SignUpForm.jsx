@@ -64,6 +64,12 @@ const SignUpForm = () => {
           alt="Logo"
           className="w-16 h-16 mb-2 rounded-full shadow"
         />
+        <h2 className="text-3xl font-bold text-blue-900 mb-2"
+                      style={{ fontFamily: "Bebas_Neue" }}
+        >
+          
+          CREATE ACCOUNT
+        </h2>
         <p className="text-blue-900 text-lg mb-2 text-center">
           Join our library management system
         </p>

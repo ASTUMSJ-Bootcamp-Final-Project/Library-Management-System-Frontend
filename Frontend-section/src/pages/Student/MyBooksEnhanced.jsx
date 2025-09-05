@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { FaBook, FaCalendarAlt, FaClock, FaUndo, FaExclamationTriangle, FaCheckCircle } from "react-icons/fa";
+import { FaBook, FaCalendarAlt, FaClock, FaUndo, FaExclamationTriangle, FaCheckCircle, FaTimes } from "react-icons/fa";
 import { borrowAPI, utils } from "@/services/api";
 import toast from "react-hot-toast";
 
@@ -38,6 +38,20 @@ const MyBooksEnhanced = () => {
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to submit return request');
       console.error('Error submitting return request:', err);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [borrowId]: false }));
+    }
+  };
+
+  const handleCancelReservation = async (borrowId) => {
+    try {
+      setActionLoading(prev => ({ ...prev, [borrowId]: true }));
+      await borrowAPI.cancelReservation(borrowId);
+      await fetchBorrowingStatus(); // Refresh data
+      toast.success('Reservation cancelled successfully!');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to cancel reservation');
+      console.error('Error cancelling reservation:', err);
     } finally {
       setActionLoading(prev => ({ ...prev, [borrowId]: false }));
     }
@@ -306,10 +320,26 @@ const MyBooksEnhanced = () => {
                         </button>
                       )}
                       {borrow.status === 'reserved' && (
-                        <span className="px-3 py-1 rounded-lg text-sm font-medium bg-yellow-100 text-yellow-800">
-                          <FaClock className="inline mr-1" />
-                          Awaiting Collection
-                        </span>
+                        <>
+                          <span className="px-3 py-1 rounded-lg text-sm font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                            <FaClock className="inline mr-1" />
+                            Awaiting Collection
+                          </span>
+                          <button
+                            onClick={() => handleCancelReservation(borrow._id)}
+                            disabled={actionLoading[borrow._id]}
+                            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                              actionLoading[borrow._id]
+                                ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                                : isDark
+                                ? "bg-red-600 hover:bg-red-700 text-white"
+                                : "bg-red-100 hover:bg-red-200 text-red-800"
+                            }`}
+                          >
+                            <FaTimes className="inline mr-1" />
+                            {actionLoading[borrow._id] ? "Cancelling..." : "Cancel"}
+                          </button>
+                        </>
                       )}
                       {borrow.status === 'return_requested' && (
                         <span className="px-3 py-1 rounded-lg text-sm font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">

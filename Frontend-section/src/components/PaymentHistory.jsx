@@ -178,7 +178,7 @@ const PaymentHistory = () => {
                           {payment.plan}
                         </td>
                         <td className={`py-3 px-4 ${isDark ? "text-white" : "text-gray-900"}`}>
-                          ₹{payment.amount}
+                          {payment.amount} ETB
                         </td>
                         <td className="py-3 px-4">
                           <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>

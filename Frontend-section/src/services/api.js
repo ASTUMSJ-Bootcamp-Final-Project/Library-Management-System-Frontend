@@ -134,6 +134,9 @@ export const borrowAPI = {
   
   // Cancel expired reservations (Admin only)
   cancelExpiredReservations: () => api.post('/borrow/cancel-expired'),
+  
+  // Cancel a reservation (User only)
+  cancelReservation: (borrowId) => api.post('/borrow/cancel-reservation', { borrowId }),
 };
 
 // Users API (Admin only)

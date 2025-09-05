@@ -21,6 +21,8 @@ const Orders = () => {
   const [paymentHistoryPage, setPaymentHistoryPage] = useState(1);
   const [paymentHistoryTotalPages, setPaymentHistoryTotalPages] = useState(1);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [borrowPage, setBorrowPage] = useState(1);
+  const borrowPageSize = 10;
 
   useEffect(() => {
     fetchBorrows();
@@ -184,6 +186,12 @@ const Orders = () => {
     return true;
   });
 
+  const borrowTotalPages = Math.max(1, Math.ceil(filteredBorrows.length / borrowPageSize));
+  const paginatedBorrows = filteredBorrows.slice(
+    (borrowPage - 1) * borrowPageSize,
+    borrowPage * borrowPageSize
+  );
+
   if (loading) {
     return (
       <div className={`flex flex-row min-h-screen ${isDark ? "bg-gray-900" : "bg-gray-100"}`}>
@@ -226,7 +234,7 @@ const Orders = () => {
       <main className="flex-1 px-6 py-3">
         <Navbar />
         
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full max-w-none">
           <div className="mb-6 pt-6 md:pt-8">
             <h1 className={`text-3xl font-bold ${isDark ? "text-white" : "text-blue-600"} mb-2`}>
               Manage Orders & Payments
@@ -321,30 +329,30 @@ const Orders = () => {
           {activeTab === 'borrowings' ? (
             /* Borrowings Table */
             <div className={`rounded-lg shadow-md overflow-hidden ${isDark ? "bg-gray-800" : "bg-white"}`}>
-            {filteredBorrows.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+            {paginatedBorrows.length > 0 ? (
+              <div>
+                <table className="w-full text-sm table-fixed">
                   <thead className={`${isDark ? "bg-gray-700" : "bg-gray-50"}`}>
                     <tr>
-                      <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-500"}`}>
+                      <th className={`w-2/5 px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-500"}`}>
                         Book
                       </th>
-                      <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-500"}`}>
+                      <th className={`w-1/5 px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-500"}`}>
                         Student
                       </th>
-                      <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-500"}`}>
+                      <th className={`w-1/6 px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-500"}`}>
                         Status
                       </th>
-                      <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-500"}`}>
+                      <th className={`w-1/6 px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-500"}`}>
                         Dates
                       </th>
-                      <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-500"}`}>
+                      <th className={`w-1/6 px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? "text-gray-300" : "text-gray-500"}`}>
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className={`divide-y ${isDark ? "divide-gray-700" : "divide-gray-200"}`}>
-                    {filteredBorrows.map((borrow) => {
+                    {paginatedBorrows.map((borrow) => {
                       const book = borrow.book || {};
                       const user = borrow.user || {};
                       const daysRemaining = borrow.dueDate ? utils.getDaysRemaining(borrow.dueDate) : null;
@@ -352,68 +360,70 @@ const Orders = () => {
                       
                       return (
                         <tr key={borrow._id} className={isDark ? "hover:bg-gray-700" : "hover:bg-gray-50"}>
-                          <td className="px-4 py-3 whitespace-nowrap">
+                          <td className="px-4 py-3">
                             <div className="flex items-center">
                               <img
                                 src={utils.getBookCoverUrl(book || {})}
                                 alt={book?.title || "Book"}
-                                className="w-16 h-24 object-cover rounded-lg mr-3"
+                                className="w-12 h-16 object-cover rounded-lg mr-3 flex-shrink-0"
                               />
-                              <div>
-                                <div className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
+                              <div className="min-w-0 flex-1">
+                                <div className={`text-sm font-medium truncate ${isDark ? "text-white" : "text-gray-900"}`} title={book?.title || "Unknown Title"}>
                                   {book?.title || "Unknown Title"}
                                 </div>
-                                <div className={`text-xs ${isDark ? "text-gray-300" : "text-gray-500"}`}>
+                                <div className={`text-xs truncate ${isDark ? "text-gray-300" : "text-gray-500"}`} title={`by ${book?.author || "Unknown"}`}>
                                   by {book?.author || "Unknown"}
                                 </div>
                               </div>
                             </div>
                           </td>
                           
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <div className={`text-sm ${isDark ? "text-white" : "text-gray-900"}`}>
+                          <td className="px-4 py-3">
+                            <div className={`text-sm truncate ${isDark ? "text-white" : "text-gray-900"}`} title={user?.name || user?.username || "Unknown"}>
                               {user?.name || user?.username || "Unknown"}
                             </div>
-                            <div className={`text-xs ${isDark ? "text-gray-300" : "text-gray-500"}`}>
+                            <div className={`text-xs truncate ${isDark ? "text-gray-300" : "text-gray-500"}`} title={user?.email || ""}>
                               {user?.email || ""}
                             </div>
                           </td>
                           
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${utils.getStatusColor(borrow.status)}`}>
-                              {utils.getStatusText(borrow.status)}
-                            </span>
-                            {daysRemaining !== null && (
-                              <div className={`text-[10px] mt-1 ${
-                                isOverdue
-                                  ? "text-red-600"
-                                  : daysRemaining <= 3
-                                  ? "text-orange-600"
-                                  : "text-green-600"
-                              }`}>
-                                {isOverdue 
-                                  ? `${Math.abs(daysRemaining)} days overdue`
-                                  : `${daysRemaining} days remaining`
-                                }
-                              </div>
-                            )}
-                          </td>
-                          
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <div className={`text-xs ${isDark ? "text-gray-300" : "text-gray-500"}`}>
-                              {borrow.borrowDate && (
-                                <div>Borrowed: {utils.formatDate(borrow.borrowDate)}</div>
-                              )}
-                              {borrow.dueDate && (
-                                <div>Due: {utils.formatDate(borrow.dueDate)}</div>
-                              )}
-                              {borrow.reservationExpiry && (
-                                <div>Expires: {utils.formatDateTime(borrow.reservationExpiry)}</div>
+                          <td className="px-4 py-3">
+                            <div className="space-y-1">
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${utils.getStatusColor(borrow.status)}`}>
+                                {utils.getStatusText(borrow.status)}
+                              </span>
+                              {daysRemaining !== null && (
+                                <div className={`text-[10px] ${
+                                  isOverdue
+                                    ? "text-red-600"
+                                    : daysRemaining <= 3
+                                    ? "text-orange-600"
+                                    : "text-green-600"
+                                }`}>
+                                  {isOverdue 
+                                    ? `${Math.abs(daysRemaining)} days overdue`
+                                    : `${daysRemaining} days remaining`
+                                  }
+                                </div>
                               )}
                             </div>
                           </td>
                           
-                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                          <td className="px-4 py-3">
+                            <div className={`text-xs space-y-1 ${isDark ? "text-gray-300" : "text-gray-500"}`}>
+                              {borrow.borrowDate && (
+                                <div className="truncate" title={`Borrowed: ${utils.formatDate(borrow.borrowDate)}`}>Borrowed: {utils.formatDate(borrow.borrowDate)}</div>
+                              )}
+                              {borrow.dueDate && (
+                                <div className="truncate" title={`Due: ${utils.formatDate(borrow.dueDate)}`}>Due: {utils.formatDate(borrow.dueDate)}</div>
+                              )}
+                              {borrow.reservationExpiry && (
+                                <div className="truncate" title={`Expires: ${utils.formatDateTime(borrow.reservationExpiry)}`}>Expires: {utils.formatDateTime(borrow.reservationExpiry)}</div>
+                              )}
+                            </div>
+                          </td>
+                          
+                          <td className="px-4 py-3 text-sm font-medium">
                             {borrow.status === 'reserved' && (
                               <button
                                 onClick={() => handleConfirmCollection(borrow._id)}
@@ -462,15 +472,53 @@ const Orders = () => {
                 </table>
               </div>
             ) : (
-              <div className="text-center py-12">
-                <FaBook className={`text-4xl mx-auto mb-4 ${isDark ? "text-gray-400" : "text-gray-300"}`} />
-                <h3 className={`text-lg font-semibold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
-                  No borrowings found
-                </h3>
-                <p className={isDark ? "text-gray-300" : "text-gray-600"}>
-                  {filter === 'all' ? 'No borrowings or reservations yet.' : `No ${filter} borrowings found.`}
-          </p>
-        </div>
+                              <div className="text-center py-12">
+                  <FaBook className={`text-4xl mx-auto mb-4 ${isDark ? "text-gray-400" : "text-gray-300"}`} />
+                  <h3 className={`text-lg font-semibold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
+                    No borrowings found
+                  </h3>
+                  <p className={isDark ? "text-gray-300" : "text-gray-600"}>
+                    {filter === 'all' ? 'No borrowings or reservations yet.' : `No ${filter} borrowings found.`}
+                  </p>
+                </div>
+            )}
+            {filteredBorrows.length > 0 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+                <div className={`text-sm ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+                  Showing {((borrowPage - 1) * borrowPageSize) + 1} to {Math.min(borrowPage * borrowPageSize, filteredBorrows.length)} of {filteredBorrows.length} results
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setBorrowPage(prev => Math.max(1, prev - 1))}
+                    disabled={borrowPage === 1}
+                    className={`px-3 py-1 text-sm rounded ${
+                      borrowPage === 1
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : isDark
+                        ? "bg-gray-700 text-white hover:bg-gray-600"
+                        : "bg-white text-gray-700 hover:bg-gray-50"
+                    } border ${isDark ? "border-gray-600" : "border-gray-300"}`}
+                  >
+                    Previous
+                  </button>
+                  <span className={`text-sm ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+                    Page {borrowPage} of {borrowTotalPages}
+                  </span>
+                  <button
+                    onClick={() => setBorrowPage(prev => Math.min(borrowTotalPages, prev + 1))}
+                    disabled={borrowPage === borrowTotalPages}
+                    className={`px-3 py-1 text-sm rounded ${
+                      borrowPage === borrowTotalPages
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : isDark
+                        ? "bg-gray-700 text-white hover:bg-gray-600"
+                        : "bg-white text-gray-700 hover:bg-gray-50"
+                    } border ${isDark ? "border-gray-600" : "border-gray-300"}`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
             )}
           </div>
           ) : (
@@ -488,43 +536,43 @@ const Orders = () => {
                     <table className="w-full text-sm">
                       <thead className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
                         <tr>
-                          <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>User</th>
-                          <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Subscription Plan</th>
-                          <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Amount</th>
-                          <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Submitted</th>
-                          <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Payment Proof</th>
-                          <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Actions</th>
+                          <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>User</th>
+                          <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Plan</th>
+                          <th className={`w-1/12 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Amount</th>
+                          <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Submitted</th>
+                          <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Proof</th>
+                          <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Actions</th>
                         </tr>
                       </thead>
                       <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-200'}`}>
                         {payments.filter(p => p.status === 'waiting_for_approval').map(payment => (
                           <tr key={payment._id} className={isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.user?.username || payment.user?.name || 'Unknown'}</div>
-                              <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{payment.user?.email || ''}</div>
+                            <td className="px-2 py-3">
+                              <div className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`} title={payment.user?.username || payment.user?.name || 'Unknown'}>{payment.user?.username || payment.user?.name || 'Unknown'}</div>
+                              <div className={`text-xs truncate ${isDark ? 'text-gray-300' : 'text-gray-500'}`} title={payment.user?.email || ''}>{payment.user?.email || ''}</div>
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap"><div className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.plan}</div></td>
-                            <td className="px-4 py-3 whitespace-nowrap"><div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.amount} ETB</div></td>
-                            <td className="px-4 py-3 whitespace-nowrap">
+                            <td className="px-2 py-3"><div className={`text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`} title={payment.plan}>{payment.plan}</div></td>
+                            <td className="px-2 py-3"><div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.amount} ETB</div></td>
+                            <td className="px-2 py-3">
                               <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{new Date(payment.submittedAt).toLocaleDateString()}</div>
                               <div className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>{new Date(payment.submittedAt).toLocaleTimeString()}</div>
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap">
+                            <td className="px-2 py-3">
                               {payment?.proof?.url ? (
-                                <a href={payment.proof.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2">
-                                  <img src={payment.proof.thumbnailUrl || payment.proof.url} alt="Proof" className="w-12 h-12 object-cover rounded border" />
-                                  <span className="text-blue-600 hover:text-blue-800 text-xs font-medium"><FaEye className="inline mr-1" />Open</span>
+                                <a href={payment.proof.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1">
+                                  <img src={payment.proof.thumbnailUrl || payment.proof.url} alt="Proof" className="w-8 h-8 object-cover rounded border" />
+                                  <span className="text-blue-600 hover:text-blue-800 text-xs font-medium"><FaEye className="inline mr-1" />View</span>
                                 </a>
                               ) : (
-                                <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No proof uploaded</span>
+                                <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No proof</span>
                               )}
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                              <div className="flex space-x-2">
-                                <button onClick={() => confirmApprovePayment(payment)} disabled={actionLoading[payment._id]} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${actionLoading[payment._id] ? 'bg-gray-400 text-gray-200 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white'}`}>
+                            <td className="px-2 py-3 text-sm font-medium">
+                              <div className="flex flex-col space-y-1">
+                                <button onClick={() => confirmApprovePayment(payment)} disabled={actionLoading[payment._id]} className={`px-2 py-1 rounded text-xs font-medium transition-colors ${actionLoading[payment._id] ? 'bg-gray-400 text-gray-200 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white'}`}>
                                   <FaCheckCircle className="inline mr-1" />{actionLoading[payment._id] ? 'Processing...' : 'Approve'}
                                 </button>
-                                <button onClick={() => confirmRejectPayment(payment)} disabled={actionLoading[payment._id]} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${actionLoading[payment._id] ? 'bg-gray-400 text-gray-200 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700 text-white'}`}>
+                                <button onClick={() => confirmRejectPayment(payment)} disabled={actionLoading[payment._id]} className={`px-2 py-1 rounded text-xs font-medium transition-colors ${actionLoading[payment._id] ? 'bg-gray-400 text-gray-200 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700 text-white'}`}>
                                   <FaBan className="inline mr-1" />{actionLoading[payment._id] ? 'Processing...' : 'Reject'}
                                 </button>
                               </div>
@@ -596,28 +644,28 @@ const Orders = () => {
                       </div>
                     </div>
                     {isHistoryOpen && (
-                      <table className="w-full text-sm">
+                      <table className="w-full text-sm table-fixed">
                         <thead className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
                           <tr>
-                            <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>User</th>
-                            <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Subscription Plan</th>
-                            <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Amount</th>
-                            <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Status</th>
-                            <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Submitted</th>
-                            <th className={`px-4 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Payment Proof</th>
+                            <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>User</th>
+                            <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Plan</th>
+                            <th className={`w-1/12 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Amount</th>
+                            <th className={`w-1/12 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Status</th>
+                            <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Submitted</th>
+                            <th className={`w-1/6 px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Proof</th>
                           </tr>
                         </thead>
                         <tbody className={`divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-200'}`}>
                           {payments.filter(p => p.status !== 'waiting_for_approval').map(payment => (
                             <tr key={payment._id} className={isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
-                              <td className="px-4 py-3 whitespace-nowrap">
-                                <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.user?.username || payment.user?.name || 'Unknown'}</div>
-                                <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{payment.user?.email || ''}</div>
+                              <td className="px-2 py-3">
+                                <div className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`} title={payment.user?.username || payment.user?.name || 'Unknown'}>{payment.user?.username || payment.user?.name || 'Unknown'}</div>
+                                <div className={`text-xs truncate ${isDark ? 'text-gray-300' : 'text-gray-500'}`} title={payment.user?.email || ''}>{payment.user?.email || ''}</div>
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap"><div className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.plan}</div></td>
-                              <td className="px-4 py-3 whitespace-nowrap"><div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.amount} ETB</div></td>
-                              <td className="px-4 py-3 whitespace-nowrap">
-                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              <td className="px-2 py-3"><div className={`text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`} title={payment.plan}>{payment.plan}</div></td>
+                              <td className="px-2 py-3"><div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.amount} ETB</div></td>
+                              <td className="px-2 py-3">
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                                   payment.status === 'approved'
                                     ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                     : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
@@ -625,18 +673,18 @@ const Orders = () => {
                                   {payment.status}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap">
+                              <td className="px-2 py-3">
                                 <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{new Date(payment.submittedAt).toLocaleDateString()}</div>
                                 <div className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>{new Date(payment.submittedAt).toLocaleTimeString()}</div>
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap">
+                              <td className="px-2 py-3">
                                 {payment?.proof?.url ? (
-                                  <a href={payment.proof.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2">
-                                    <img src={payment.proof.thumbnailUrl || payment.proof.url} alt="Proof" className="w-12 h-12 object-cover rounded border" />
-                                    <span className="text-blue-600 hover:text-blue-800 text-xs font-medium"><FaEye className="inline mr-1" />Open</span>
+                                  <a href={payment.proof.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1">
+                                    <img src={payment.proof.thumbnailUrl || payment.proof.url} alt="Proof" className="w-8 h-8 object-cover rounded border" />
+                                    <span className="text-blue-600 hover:text-blue-800 text-xs font-medium"><FaEye className="inline mr-1" />View</span>
                                   </a>
                                 ) : (
-                                  <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No proof uploaded</span>
+                                  <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No proof</span>
                                 )}
                               </td>
                             </tr>
