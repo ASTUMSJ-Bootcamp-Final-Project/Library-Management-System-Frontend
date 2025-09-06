@@ -39,7 +39,7 @@ import {
 } from "recharts";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { booksAPI, authAPI, borrowAPI } from "@/services/api";
+import { booksAPI, usersAPI, borrowAPI } from "@/services/api";
 import BorrowingHistory from "@/components/BorrowingHistory";
 import CarouselControl from "@/components/CarouselControl";
 // Live dashboard data
@@ -89,8 +89,8 @@ const AdminDashboardModern = () => {
         const userJson = JSON.parse(localStorage.getItem("user") || "{}");
         const isSuper = userJson.role === "super_admin";
         const usersRes = isSuper
-          ? await authAPI.getAllUsersSuperAdmin()
-          : await authAPI.getAllUsersAdminView();
+          ? await usersAPI.getAllUsersSuperAdmin()
+          : await usersAPI.getAllUsersAdminView();
         setUsers(usersRes.data || []);
         anySuccess = true;
       } catch (_) {

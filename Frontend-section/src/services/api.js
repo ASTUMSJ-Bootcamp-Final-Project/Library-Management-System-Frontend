@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base URL for the backend API
-const API_BASE_URL = 'https://library-management-system-backend-wi5k.onrender.com/api';
+const API_BASE_URL = 'https://library-management-system-backend-wi5k.onrender.com';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -40,20 +40,10 @@ api.interceptors.response.use(
 
 // Auth API
 export const authAPI = {
-  login: (credentials) => api.post('/auth/login', credentials),
-  register: (userData) => api.post('/auth/register', userData),
-  getProfile: () => api.get('/auth/profile'),
-  deleteProfile: () => api.delete('/auth/profile'),
-  createSuperAdmin: (userData) => api.post('/auth/super-admin', userData),
-  createAdmin: (userData) => api.post('/auth/admin', userData),
-  promoteToAdmin: (userId) => api.put(`/auth/promote/${userId}`),
-  demoteAdmin: (userId) => api.put(`/auth/demote/${userId}`),
-  deleteAnyUser: (userId) => api.delete(`/auth/${userId}`),
-  getAllUsersSuperAdmin: () => api.get('/auth/all'),
-  getAllUsersAdminView: () => api.get('/auth/users'),
-  deleteRegularUser: (userId) => api.delete(`/auth/user/${userId}`),
-  updateMembershipStatus: (userId, membershipStatus) => 
-    api.put(`/auth/membership/${userId}`, { membershipStatus }),
+  login: (credentials) => api.post('/users/login', credentials),
+  register: (userData) => api.post('/users/register', userData),
+  getProfile: () => api.get('/users/profile'),
+  deleteProfile: () => api.delete('/users/profile'),
 };
 
 // Books API
@@ -153,8 +143,21 @@ export const borrowAPI = {
     api.get(`/borrow/user-history?page=${page}&limit=${limit}`),
 };
 
-// Users API (Admin only) - Moved to authAPI above
-// export const usersAPI = { ... };
+// Users API (Admin only)
+export const usersAPI = {
+  // Super admin endpoints
+  getAllUsersSuperAdmin: () => api.get('/users/all'),
+  createAdmin: (userData) => api.post('/users/admin', userData),
+  promoteToAdmin: (userId) => api.put(`/users/promote/${userId}`),
+  demoteAdmin: (userId) => api.put(`/users/demote/${userId}`),
+  deleteAnyUser: (userId) => api.delete(`/users/${userId}`),
+  
+  // Admin endpoints
+  getAllUsersAdminView: () => api.get('/users/users'),
+  deleteRegularUser: (userId) => api.delete(`/users/user/${userId}`),
+  updateMembershipStatus: (userId, membershipStatus) => 
+    api.put(`/users/membership/${userId}`, { membershipStatus }),
+};
 
 // Payment API
 export const paymentAPI = {
