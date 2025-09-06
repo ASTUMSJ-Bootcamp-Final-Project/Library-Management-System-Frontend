@@ -15,8 +15,11 @@ const InputForm = () => {
     const email = e.target.email.value;
     const password = e.target.password.value;
 
+    console.log("Attempting login with:", { email, password });
+
     try {
       const response = await authAPI.login({ email, password });
+      console.log("Login response:", response.data);
       const data = response.data;
 
       // Save token and user info
@@ -30,6 +33,8 @@ const InputForm = () => {
         navigate("/student");
       }
     } catch (err) {
+      console.error("Login error:", err);
+      console.error("Error response:", err.response?.data);
       setError(err.response?.data?.message || "Login failed. Please try again.");
     }
   };
