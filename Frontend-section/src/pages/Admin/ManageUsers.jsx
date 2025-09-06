@@ -2,7 +2,7 @@ import AdminSidebar from "@/components/AdminSidebar";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import React, { useEffect, useMemo, useState } from "react";
-import { usersAPI } from "@/services/api";
+import { authAPI } from "@/services/api";
 import toast from "react-hot-toast";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -31,8 +31,8 @@ const ManageUsers = () => {
     try {
       setLoading(true);
       const { data } = isSuperAdmin
-        ? await usersAPI.getAllUsersSuperAdmin()
-        : await usersAPI.getAllUsersAdminView();
+        ? await authAPI.getAllUsersSuperAdmin()
+        : await authAPI.getAllUsersAdminView();
       
       const allUsers = data || [];
       
@@ -76,7 +76,7 @@ const ManageUsers = () => {
 
   const handlePromote = async (userId) => {
     try {
-      await usersAPI.promoteToAdmin(userId);
+      await authAPI.promoteToAdmin(userId);
       toast.success("User promoted to admin");
       // Reload current page to reflect changes
       loadUsers(pagination.currentPage, pagination.limit);
@@ -89,7 +89,7 @@ const ManageUsers = () => {
 
   const handleDemote = async (userId) => {
     try {
-      await usersAPI.demoteAdmin(userId);
+      await authAPI.demoteAdmin(userId);
       toast.success("Admin demoted to user");
       // Reload current page to reflect changes
       loadUsers(pagination.currentPage, pagination.limit);
@@ -103,9 +103,9 @@ const ManageUsers = () => {
   const handleDelete = async (userId, isRegular) => {
     try {
       if (isSuperAdmin) {
-        await usersAPI.deleteAnyUser(userId);
+        await authAPI.deleteAnyUser(userId);
       } else if (isRegular) {
-        await usersAPI.deleteRegularUser(userId);
+        await authAPI.deleteRegularUser(userId);
       }
       toast.success("User deleted");
       // Reload current page to reflect changes
