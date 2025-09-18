@@ -1,7 +1,12 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import StudentBookCard from "@/components/StudentBookCard";
-import { FaSearch, FaFilter, FaSort, FaExclamationTriangle } from "react-icons/fa";
+import {
+  FaSearch,
+  FaFilter,
+  FaSort,
+  FaExclamationTriangle,
+} from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 import { booksAPI, borrowAPI, utils } from "@/services/api";
 import toast from "react-hot-toast";
@@ -38,8 +43,8 @@ const BookListEnhanced = () => {
       setBooks(response.data);
       setError(null);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch books');
-      console.error('Error fetching books:', err);
+      setError(err.response?.data?.message || "Failed to fetch books");
+      console.error("Error fetching books:", err);
     } finally {
       setLoading(false);
     }
@@ -50,7 +55,7 @@ const BookListEnhanced = () => {
       const response = await borrowAPI.getUserBorrowingStatus();
       setBorrowingStatus(response.data);
     } catch (err) {
-      console.error('Error fetching borrowing status:', err);
+      console.error("Error fetching borrowing status:", err);
     }
   };
 
@@ -96,21 +101,27 @@ const BookListEnhanced = () => {
 
   const handleBorrowBook = async (bookId) => {
     try {
-      setActionLoading(prev => ({ ...prev, [bookId]: true }));
+      setActionLoading((prev) => ({ ...prev, [bookId]: true }));
       await borrowAPI.requestBorrow(bookId);
       await fetchBorrowingStatus(); // Refresh borrowing status
-      toast.success('Book reserved successfully! Please collect it within 24 hours.');
+      toast.success(
+        "Book reserved successfully! Please collect it within 24 hours."
+      );
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Failed to reserve book';
-      
+      const errorMessage =
+        err.response?.data?.message || "Failed to reserve book";
+
       // Check if it's a membership pending error
-      if (errorMessage.includes('membership is pending')) {
+      if (errorMessage.includes("membership is pending")) {
         toast.error(
           <div>
             <p className="font-medium">Membership Required</p>
             <p className="text-sm mt-1">{errorMessage}</p>
             <p className="text-sm mt-2">
-              <a href="/student/profile" className="text-blue-600 hover:underline">
+              <a
+                href="/student/profile"
+                className="text-blue-600 hover:underline"
+              >
                 Go to Profile to Subscribe →
               </a>
             </p>
@@ -120,9 +131,9 @@ const BookListEnhanced = () => {
       } else {
         toast.error(errorMessage);
       }
-      console.error('Error borrowing book:', err);
+      console.error("Error borrowing book:", err);
     } finally {
-      setActionLoading(prev => ({ ...prev, [bookId]: false }));
+      setActionLoading((prev) => ({ ...prev, [bookId]: false }));
     }
   };
 
@@ -236,12 +247,15 @@ const BookListEnhanced = () => {
         {filteredBooks.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredBooks.map((book) => (
-              <StudentBookCard 
-                key={book._id} 
-                book={book} 
+              <StudentBookCard
+                key={book._id}
+                book={book}
                 onBorrow={handleBorrowBook}
                 actionLoading={actionLoading[book._id]}
-                canBorrow={borrowingStatus?.booksRemaining > 0 && book.availableCopies > 0}
+                canBorrow={
+                  borrowingStatus?.booksRemaining > 0 &&
+                  book.availableCopies > 0
+                }
                 borrowingStatus={borrowingStatus}
               />
             ))}
