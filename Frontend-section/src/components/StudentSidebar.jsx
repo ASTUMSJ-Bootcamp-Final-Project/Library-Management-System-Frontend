@@ -42,22 +42,22 @@ const StudentSidebar = () => {
         isDark
           ? "bg-gray-800 border-r border-gray-700 text-white"
           : "bg-white border-r border-gray-200 text-gray-800"
-      } ${collapsed ? "w-16" : "w-64"}`}
+      } ${collapsed ? "w-16" : "w-32 sm:w-48 md:w-64"}`}
     >
       {/* Header */}
       <div
-        className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} p-4 border-b ${
-          isDark ? "border-gray-700" : "border-gray-200"
-        }`}
+        className={`flex items-center ${
+          collapsed ? "justify-center" : "justify-between"
+        } p-4 border-b ${isDark ? "border-gray-700" : "border-gray-200"}`}
       >
         {!collapsed ? (
           <>
             <div className="flex items-center space-x-3">
               {/* Logo */}
               <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
-                <img 
-                  src={logo} 
-                  alt="Library Logo" 
+                <img
+                  src={logo}
+                  alt="Library Logo"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -69,7 +69,7 @@ const StudentSidebar = () => {
                 ASTUMSJ Library
               </span>
             </div>
-            
+
             {/* Collapse Button */}
             <button
               onClick={toggleSidebar}
@@ -116,9 +116,9 @@ const StudentSidebar = () => {
               >
                 <span
                   className={`text-lg ${
-                    isActive(item.link) 
-                      ? isDark 
-                        ? "text-white" 
+                    isActive(item.link)
+                      ? isDark
+                        ? "text-white"
                         : "text-blue-700"
                       : ""
                   }`}
@@ -140,13 +140,15 @@ const StudentSidebar = () => {
 
       {/* Footer Section */}
       <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700">
-        <div className={`mb-4 ${collapsed ? 'flex justify-center' : ''}`}>
+        <div className={`mb-4 ${collapsed ? "flex justify-center" : ""}`}>
           <ThemeToggle />
         </div>
-        <div className={`${collapsed ? 'flex justify-center' : ''}`}>
+        <div className={`${collapsed ? "flex justify-center" : ""}`}>
           <button
             onClick={handleLogout}
-            className={`${collapsed ? 'w-28' : 'w-full'} flex items-center ${collapsed ? 'justify-center' : 'justify-start'} px-4 py-2 rounded-lg transition-all duration-200 ${
+            className={`${collapsed ? "w-28" : "w-full"} flex items-center ${
+              collapsed ? "justify-center" : "justify-start"
+            } px-4 py-2 rounded-lg transition-all duration-200 ${
               isDark
                 ? "text-red-400 hover:text-red-300 hover:bg-red-900/30"
                 : "text-red-600 hover:text-red-700 hover:bg-red-100"

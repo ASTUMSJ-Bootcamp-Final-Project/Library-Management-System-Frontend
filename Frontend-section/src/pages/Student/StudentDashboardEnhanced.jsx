@@ -16,8 +16,10 @@ const StudentDashboardEnhanced = () => {
   const [loading, setLoading] = useState(true);
 
   const data = localStorage.getItem("user");
-  const [studentProfile, setStudentProfile] = useState(data ? JSON.parse(data) : {});
-  
+  const [studentProfile, setStudentProfile] = useState(
+    data ? JSON.parse(data) : {}
+  );
+
   // Resolve membership end date: only use membershipExpiryDate
   const getMembershipEndDate = () => {
     if (studentProfile && studentProfile.membershipExpiryDate) {
@@ -37,7 +39,8 @@ const StudentDashboardEnhanced = () => {
       const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       const months = Math.floor(totalDays / 30);
       const days = totalDays % 30;
-      if (months > 0 && days > 0) return { text: `${months} mo ${days} d`, isExpired: false };
+      if (months > 0 && days > 0)
+        return { text: `${months} mo ${days} d`, isExpired: false };
       if (months > 0) return { text: `${months} mo`, isExpired: false };
       return { text: `${totalDays} d`, isExpired: false };
     } catch {
@@ -58,7 +61,7 @@ const StudentDashboardEnhanced = () => {
     }
     return "bg-green-500";
   };
-  
+
   // Get membership status with proper color mapping
   const getMembershipStatus = () => {
     try {
@@ -88,9 +91,11 @@ const StudentDashboardEnhanced = () => {
       try {
         const { data: profile } = await authAPI.getProfile();
         if (!isMounted) return;
-        setStudentProfile(prev => {
+        setStudentProfile((prev) => {
           const merged = { ...prev, ...profile };
-          try { localStorage.setItem('user', JSON.stringify(merged)); } catch {}
+          try {
+            localStorage.setItem("user", JSON.stringify(merged));
+          } catch {}
           return merged;
         });
       } catch (e) {
@@ -98,7 +103,9 @@ const StudentDashboardEnhanced = () => {
       }
     };
     fetchProfile();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -108,13 +115,13 @@ const StudentDashboardEnhanced = () => {
         const response = await borrowAPI.getUserBorrowingStatus();
         setBorrowingStatus(response.data);
       } catch (err) {
-        console.error('Error fetching borrowing status:', err);
+        console.error("Error fetching borrowing status:", err);
         // Set default values if API fails
         setBorrowingStatus({
           totalBorrowed: 0,
           totalReserved: 0,
           booksRemaining: 3,
-          maxBooksAllowed: 3
+          maxBooksAllowed: 3,
         });
       } finally {
         setLoading(false);
@@ -130,7 +137,11 @@ const StudentDashboardEnhanced = () => {
   const stats = [
     {
       title: "Borrowed Books",
-      value: loading ? "Loading..." : `${borrowingStatus?.totalBorrowed || 0}/${borrowingStatus?.maxBooksAllowed || 3}`,
+      value: loading
+        ? "Loading..."
+        : `${borrowingStatus?.totalBorrowed || 0}/${
+            borrowingStatus?.maxBooksAllowed || 3
+          }`,
       icon: <FaBook className="text-2xl" />,
       color: "bg-blue-500",
     },
@@ -163,7 +174,8 @@ const StudentDashboardEnhanced = () => {
               isDark ? "text-white" : "text-gray-900"
             } mb-2`}
           >
-            Welcome back, {studentProfile?.username || studentProfile?.name || "User"}!
+            Welcome back,{" "}
+            {studentProfile?.username || studentProfile?.name || "User"}!
           </h1>
           {/* Email hidden per requirement */}
         </div>

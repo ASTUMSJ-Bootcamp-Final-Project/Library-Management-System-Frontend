@@ -3,17 +3,27 @@ import { Button } from "./ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { MdEmail, MdLock, MdPerson } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import logo from "../assets/logo.jpg"; // Adjust path as needed
+import { FaBookOpen } from "react-icons/fa";
 import { authAPI } from "@/services/api";
 import toast from "react-hot-toast";
+
 const SignUpForm = () => {
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Focus states for floating labels
+  const [firstNameFocused, setFirstNameFocused] = useState(false);
+  const [lastNameFocused, setLastNameFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [confirmFocused, setConfirmFocused] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     const formData = new FormData(e.target);
     const firstName = formData.get("firstName")?.trim();
     const lastName = formData.get("lastName")?.trim();
@@ -23,13 +33,19 @@ const SignUpForm = () => {
     const terms = formData.get("terms") === "on";
 
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      return setError("All fields are required.");
+      setError("All fields are required.");
+      setIsLoading(false);
+      return;
     }
     if (password !== confirmPassword) {
-      return setError("Passwords do not match.");
+      setError("Passwords do not match.");
+      setIsLoading(false);
+      return;
     }
     if (!terms) {
-      return setError("You must agree to the terms.");
+      setError("You must agree to the terms.");
+      setIsLoading(false);
+      return;
     }
 
     setError(""); // Clear previous errors
@@ -53,119 +69,145 @@ const SignUpForm = () => {
       setError(
         err.response?.data?.message || "Signup failed. Please try again."
       );
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="w-full max-w-md bg-white bg-opacity-80 rounded-xl p-5 backdrop-blur-md">
-      <div className="flex flex-col items-center mb-4">
-        <img
-          src={logo}
-          alt="Logo"
-          className="w-16 h-16 mb-2 rounded-full shadow"
-        />
-        <h2 className="text-3xl font-bold text-blue-900 mb-2"
-                      style={{ fontFamily: "Bebas_Neue" }}
-        >
-          
-          CREATE ACCOUNT
-        </h2>
-        <p className="text-blue-900 text-lg mb-2 text-center">
-          Join our library management system
-        </p>
-      </div>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <div className="w-full max-w-md">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
         <div className="flex gap-4">
-          <div className="w-1/2">
+          <div className="w-1/2 group relative">
             <label
-              className="block text-blue-900 font-semibold mb-1"
+              className={`absolute left-10 top-3 text-gray-600 font-medium transition-all duration-300 pointer-events-none ${
+                firstNameFocused || document.getElementById("firstName")?.value
+                  ? "text-xs -top-2 text-amber-600 bg-white px-1"
+                  : "text-base"
+              }`}
               htmlFor="firstName"
             >
               First Name
             </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-400">
+            <div className="relative transform transition-all duration-300 hover:scale-[1.02] focus-within:scale-[1.02]">
+              <span
+                className={`absolute inset-y-0 left-0 flex items-center pl-3 transition-all duration-300 ${
+                  firstNameFocused ? "text-blue-600" : "text-gray-400"
+                }`}
+              >
                 <MdPerson size={20} />
               </span>
               <input
-                className="border text-black border-blue-300 rounded-md px-4 py-2 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="border text-black border-gray-300 rounded-xl px-4 py-4 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow-sm hover:shadow-md focus:shadow-xl bg-white/80 backdrop-blur-sm"
                 type="text"
                 name="firstName"
                 id="firstName"
-                placeholder="Mohammed"
+                placeholder=""
                 required
                 autoComplete="given-name"
+                onFocus={() => setFirstNameFocused(true)}
+                onBlur={(e) => setFirstNameFocused(e.target.value !== "")}
               />
             </div>
           </div>
-          <div className="w-1/2">
+          <div className="w-1/2 group relative">
             <label
-              className="block text-blue-900 font-semibold mb-1"
+              className={`absolute left-10 top-3 text-gray-600 font-medium transition-all duration-300 pointer-events-none ${
+                lastNameFocused || document.getElementById("lastName")?.value
+                  ? "text-xs -top-2 text-amber-600 bg-white px-1"
+                  : "text-base"
+              }`}
               htmlFor="lastName"
             >
               Last Name
             </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-400">
+            <div className="relative transform transition-all duration-300 hover:scale-[1.02] focus-within:scale-[1.02]">
+              <span
+                className={`absolute inset-y-0 left-0 flex items-center pl-3 transition-all duration-300 ${
+                  lastNameFocused ? "text-blue-600" : "text-gray-400"
+                }`}
+              >
                 <MdPerson size={20} />
               </span>
               <input
-                className="border text-black border-blue-300 rounded-md px-4 py-2 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="border text-black border-gray-300 rounded-xl px-4 py-4 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow-sm hover:shadow-md focus:shadow-xl bg-white/80 backdrop-blur-sm"
                 type="text"
                 name="lastName"
                 id="lastName"
-                placeholder="Ali"
+                placeholder=""
                 required
                 autoComplete="family-name"
+                onFocus={() => setLastNameFocused(true)}
+                onBlur={(e) => setLastNameFocused(e.target.value !== "")}
               />
             </div>
           </div>
         </div>
-        <div>
+        <div className="group relative">
           <label
-            className="block text-blue-900 font-semibold mb-1"
+            className={`absolute left-10 top-3 text-gray-600 font-medium transition-all duration-300 pointer-events-none ${
+              emailFocused || document.getElementById("email")?.value
+                ? "text-xs -top-2 text-amber-600 bg-white px-1"
+                : "text-base"
+            }`}
             htmlFor="email"
           >
             Email Address
           </label>
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-400">
+          <div className="relative transform transition-all duration-300 hover:scale-[1.02] focus-within:scale-[1.02]">
+            <span
+              className={`absolute inset-y-0 left-0 flex items-center pl-3 transition-all duration-300 ${
+                emailFocused ? "text-blue-600" : "text-gray-400"
+              }`}
+            >
               <MdEmail size={20} />
             </span>
             <input
-              className="border text-black border-blue-300 rounded-md px-4 py-2 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="border text-black border-gray-300 rounded-xl px-4 py-4 w-full pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow-sm hover:shadow-md focus:shadow-xl bg-white/80 backdrop-blur-sm"
               type="email"
               name="email"
               id="email"
-              placeholder="mohammed.ali@gmail.com"
+              placeholder=""
               required
               autoComplete="username"
+              onFocus={() => setEmailFocused(true)}
+              onBlur={(e) => setEmailFocused(e.target.value !== "")}
             />
           </div>
         </div>
-        <div>
+        <div className="group relative">
           <label
-            className="block text-blue-900 font-semibold mb-1"
+            className={`absolute left-10 top-3 text-gray-600 font-medium transition-all duration-300 pointer-events-none ${
+              passwordFocused || document.getElementById("password")?.value
+                ? "text-xs -top-2 text-amber-600 bg-white px-1"
+                : "text-base"
+            }`}
             htmlFor="password"
           >
             Password
           </label>
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-400">
+          <div className="relative transform transition-all duration-300 hover:scale-[1.02] focus-within:scale-[1.02]">
+            <span
+              className={`absolute inset-y-0 left-0 flex items-center pl-3 transition-all duration-300 ${
+                passwordFocused ? "text-blue-600" : "text-gray-400"
+              }`}
+            >
               <MdLock size={20} />
             </span>
             <input
-              className="border text-black border-blue-300 rounded-md px-4 py-2 w-full pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="border text-black border-gray-300 rounded-xl px-4 py-4 w-full pl-10 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow-sm hover:shadow-md focus:shadow-xl bg-white/80 backdrop-blur-sm"
               type={showPassword ? "text" : "password"}
               name="password"
               id="password"
-              placeholder="Create a strong password"
+              placeholder=""
               required
               autoComplete="new-password"
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={(e) => setPasswordFocused(e.target.value !== "")}
             />
             <button
               type="button"
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-400"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-blue-600 transition-colors duration-200"
               onClick={() => setShowPassword((prev) => !prev)}
               tabIndex={-1}
             >
@@ -177,29 +219,40 @@ const SignUpForm = () => {
             </button>
           </div>
         </div>
-        <div>
+        <div className="group relative">
           <label
-            className="block text-blue-900 font-semibold mb-1"
+            className={`absolute left-10 top-3 text-gray-600 font-medium transition-all duration-300 pointer-events-none ${
+              confirmFocused ||
+              document.getElementById("confirmPassword")?.value
+                ? "text-xs -top-2 text-amber-600 bg-white px-1"
+                : "text-base"
+            }`}
             htmlFor="confirmPassword"
           >
             Confirm Password
           </label>
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-400">
+          <div className="relative transform transition-all duration-300 hover:scale-[1.02] focus-within:scale-[1.02]">
+            <span
+              className={`absolute inset-y-0 left-0 flex items-center pl-3 transition-all duration-300 ${
+                confirmFocused ? "text-blue-600" : "text-gray-400"
+              }`}
+            >
               <MdLock size={20} />
             </span>
             <input
-              className="border text-black border-blue-300 rounded-md px-4 py-2 w-full pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="border text-black border-gray-300 rounded-xl px-4 py-4 w-full pl-10 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 shadow-sm hover:shadow-md focus:shadow-xl bg-white/80 backdrop-blur-sm"
               type={showConfirm ? "text" : "password"}
               name="confirmPassword"
               id="confirmPassword"
-              placeholder="Confirm your password"
+              placeholder=""
               required
               autoComplete="new-password"
+              onFocus={() => setConfirmFocused(true)}
+              onBlur={(e) => setConfirmFocused(e.target.value !== "")}
             />
             <button
               type="button"
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-400"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-blue-600 transition-colors duration-200"
               onClick={() => setShowConfirm((prev) => !prev)}
               tabIndex={-1}
             >
@@ -211,7 +264,7 @@ const SignUpForm = () => {
             </button>
           </div>
         </div>
-        
+
         <div className="flex items-center mb-2">
           <input
             type="checkbox"
@@ -222,25 +275,44 @@ const SignUpForm = () => {
           />
           <label htmlFor="terms" className="text-gray-700 text-sm">
             I agree to the{" "}
-            <a href="#" className="text-blue-600 font-semibold hover:underline">
+            <a
+              href="#"
+              className="text-blue-600 font-semibold hover:underline"
+            >
               Terms of Service
             </a>{" "}
             and{" "}
-            <a href="#" className="text-blue-600 font-semibold hover:underline">
+            <a
+              href="#"
+              className="text-blue-600 font-semibold hover:underline"
+            >
               Privacy Policy
             </a>
           </label>
         </div>
         {error && (
-          <div className="text-red-600 text-sm text-center">{error}</div>
+          <div className="text-red-600 text-sm text-center bg-red-50/80 backdrop-blur-sm p-4 rounded-xl border border-red-200 animate-fade-in-up shadow-lg">
+            {error}
+          </div>
         )}
         <Button
           type="submit"
-          className="bg-blue-600 text-white py-2 px-4 rounded-md font-bold hover:bg-blue-700 transition"
+          disabled={isLoading}
+          className="bg-blue-600 text-white py-4 px-6 rounded-xl font-bold hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
         >
-          Create Account
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+              Creating Account...
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-2">
+              <FaBookOpen size={18} />
+              Create Account
+            </div>
+          )}
         </Button>
-        <p className="text-center text-blue-900 mt-2">
+        <p className="text-center text-gray-700 mt-2">
           Already have an account?{" "}
           <Link to="/" className="text-blue-600 font-semibold hover:underline">
             Login here

@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { FaCalendarAlt, FaMapMarkerAlt, FaClock, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaMapMarkerAlt,
+  FaClock,
+  FaChevronLeft,
+  FaChevronRight,
+} from "react-icons/fa";
 import { eventsAPI } from "@/services/api";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -17,18 +23,21 @@ const EventsCarousel = () => {
       date: "March 15, 2024",
       time: "2:00 PM - 4:00 PM",
       location: "Main Library Hall",
-      image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop",
-      category: "Workshop"
+      image:
+        "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop",
+      category: "Workshop",
     },
     {
       id: 2,
       title: "Book Reading Session",
-      description: "Join us for an interactive reading session with local authors",
+      description:
+        "Join us for an interactive reading session with local authors",
       date: "March 20, 2024",
       time: "6:00 PM - 8:00 PM",
       location: "Reading Corner",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
-      category: "Reading"
+      image:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
+      category: "Reading",
     },
     {
       id: 3,
@@ -37,18 +46,19 @@ const EventsCarousel = () => {
       date: "March 25, 2024",
       time: "10:00 AM - 12:00 PM",
       location: "Computer Lab",
-      image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop",
-      category: "Technology"
-    }
+      image:
+        "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop",
+      category: "Technology",
+    },
   ];
 
   // Load events from backend, fallback to localStorage/default
   const [events, setEvents] = useState(() => {
     try {
-      const savedEvents = localStorage.getItem('library-events');
+      const savedEvents = localStorage.getItem("library-events");
       return savedEvents ? JSON.parse(savedEvents) : defaultEvents;
     } catch (error) {
-      console.error('Error loading events from localStorage:', error);
+      console.error("Error loading events from localStorage:", error);
       return defaultEvents;
     }
   });
@@ -58,50 +68,58 @@ const EventsCarousel = () => {
     const load = async () => {
       try {
         const { data } = await eventsAPI.list();
-        if (isMounted && Array.isArray(data?.events) && data.events.length > 0) {
-          const mapped = data.events.map(e => ({
+        if (
+          isMounted &&
+          Array.isArray(data?.events) &&
+          data.events.length > 0
+        ) {
+          const mapped = data.events.map((e) => ({
             id: e._id,
             title: e.title,
             description: e.description,
             date: e.date,
             time: e.time,
             location: e.location,
-            image: e.image?.url || e.image || '',
-            category: e.category || 'Event',
+            image: e.image?.url || e.image || "",
+            category: e.category || "Event",
           }));
           setEvents(mapped);
-          try { localStorage.setItem('library-events', JSON.stringify(mapped)); } catch {}
+          try {
+            localStorage.setItem("library-events", JSON.stringify(mapped));
+          } catch {}
         }
       } catch (err) {
         // Fallback silently to localStorage/default
-        console.warn('Failed to load events from backend, using fallback');
+        console.warn("Failed to load events from backend, using fallback");
       }
     };
     load();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Listen for changes to localStorage (when admin updates events)
   useEffect(() => {
     const handleStorageChange = () => {
       try {
-        const savedEvents = localStorage.getItem('library-events');
+        const savedEvents = localStorage.getItem("library-events");
         if (savedEvents) {
           setEvents(JSON.parse(savedEvents));
         }
       } catch (error) {
-        console.error('Error loading events from localStorage:', error);
+        console.error("Error loading events from localStorage:", error);
       }
     };
 
     // Listen for storage events (when localStorage changes in other tabs)
-    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
 
     // Also check for changes periodically (for same-tab updates)
     const interval = setInterval(handleStorageChange, 1000);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener("storage", handleStorageChange);
       clearInterval(interval);
     };
   }, []);
@@ -148,7 +166,7 @@ const EventsCarousel = () => {
   };
 
   return (
-    <div 
+    <div
       className="relative w-full h-full"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -166,10 +184,10 @@ const EventsCarousel = () => {
                   isDark ? "bg-gray-800" : "bg-white"
                 }`}
                 style={{
-                  boxShadow: isDark 
-                    ? '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-                    : '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.1)',
-                  marginBottom: '12px'
+                  boxShadow: isDark
+                    ? "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
+                    : "0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.1)",
+                  marginBottom: "12px",
                 }}
               >
                 {/* Event Image */}
@@ -262,7 +280,6 @@ const EventsCarousel = () => {
           ))}
         </div>
       </div>
-
 
       {/* Navigation Arrows */}
       <button
