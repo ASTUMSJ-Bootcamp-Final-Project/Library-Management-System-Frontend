@@ -43,12 +43,14 @@ const StudentNavbar = () => {
           <div className="flex items-center space-x-3">
             <button
               onClick={() => navigate("/student/profile")}
-              className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                isDark ? "bg-blue-600" : "bg-blue-500"
+              className={`w-10 h-10 rounded-full flex items-center justify-center group relative transition-all duration-300 hover:scale-110 hover:shadow-lg ${
+                isDark 
+                  ? "bg-blue-600 hover:bg-blue-500 hover:shadow-blue-500/50" 
+                  : "bg-blue-500 hover:bg-blue-600 hover:shadow-blue-500/50"
               } text-white`}
               aria-label="Open Profile"
             >
-              <FaUser className="text-sm" />
+              <FaUser className="text-sm transition-all duration-300 group-hover:scale-110" />
             </button>
             <div className="hidden md:block">
               <p

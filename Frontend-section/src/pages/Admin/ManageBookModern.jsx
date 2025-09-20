@@ -87,34 +87,36 @@ const ManageBookModern = () => {
     // Sort books
     filtered.sort((a, b) => {
       let aValue, bValue;
+      let result = 0;
 
       switch (sortBy) {
         case "title":
           aValue = (a.title || "").toLowerCase();
           bValue = (b.title || "").toLowerCase();
+          result = aValue.localeCompare(bValue);
           break;
         case "author":
           aValue = (a.author || "").toLowerCase();
           bValue = (b.author || "").toLowerCase();
+          result = aValue.localeCompare(bValue);
           break;
         case "available":
-          aValue = (Number(a.availableCopies) || 0);
-          bValue = (Number(b.availableCopies) || 0);
+          aValue = Number(a.availableCopies) || 0;
+          bValue = Number(b.availableCopies) || 0;
+          result = aValue - bValue;
           break;
         case "borrowed":
           aValue = (Number(a.totalCopies) || 0) - (Number(a.availableCopies) || 0);
           bValue = (Number(b.totalCopies) || 0) - (Number(b.availableCopies) || 0);
+          result = aValue - bValue;
           break;
         default:
           aValue = (a.title || "").toLowerCase();
           bValue = (b.title || "").toLowerCase();
+          result = aValue.localeCompare(bValue);
       }
 
-      if (sortOrder === "asc") {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
+      return sortOrder === "asc" ? result : -result;
     });
 
     return filtered;

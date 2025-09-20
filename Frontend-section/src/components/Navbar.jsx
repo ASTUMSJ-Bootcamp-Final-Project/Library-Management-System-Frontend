@@ -86,14 +86,18 @@ const Navbar = () => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => navigate('/admin/profile')}
-                className={`p-2 rounded-full ${
+                className={`p-2 rounded-full group relative ${
                   isDark ? "bg-gray-800" : "bg-gray-100"
-                } hover:opacity-90 transition-opacity`}
+                } hover:opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-lg ${
+                  isDark 
+                    ? "hover:bg-gray-700 hover:shadow-gray-900/50" 
+                    : "hover:bg-gray-200 hover:shadow-gray-300/50"
+                }`}
                 title="My Profile"
               >
                 <FaUserCircle
-                  className={`text-xl ${
-                    isDark ? "text-gray-400" : "text-gray-600"
+                  className={`text-xl transition-all duration-300 ${
+                    isDark ? "text-gray-400 group-hover:text-blue-400" : "text-gray-600 group-hover:text-blue-600"
                   }`}
                 />
               </button>
