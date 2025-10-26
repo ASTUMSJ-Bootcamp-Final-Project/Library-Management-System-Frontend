@@ -164,9 +164,9 @@ const PaymentHistory = () => {
                     <th className={`text-left py-3 px-4 font-medium ${isDark ? "text-gray-300" : "text-gray-600"}`}>
                       Date
                     </th>
-                    <th className={`text-left py-3 px-4 font-medium ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+                    {/* <th className={`text-left py-3 px-4 font-medium ${isDark ? "text-gray-300" : "text-gray-600"}`}>
                       Proof
-                    </th>
+                    </th> */}
                   </tr>
                 </thead>
                 <tbody>
@@ -189,13 +189,13 @@ const PaymentHistory = () => {
                         <td className={`py-3 px-4 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                           {utils.formatDate(payment.submittedAt)}
                         </td>
-                        <td className={`py-3 px-4 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                        {/* <td className={`py-3 px-4 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
                           {payment.paymentProof ? (
                             <span className="text-green-600 dark:text-green-400">✓ Uploaded</span>
                           ) : (
                             <span className="text-gray-400">-</span>
                           )}
-                        </td>
+                        </td> */}
                       </tr>
                     );
                   })}

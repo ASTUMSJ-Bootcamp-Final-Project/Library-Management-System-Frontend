@@ -98,12 +98,14 @@ const ManageBookModern = () => {
           bValue = (b.author || "").toLowerCase();
           break;
         case "available":
-          aValue = (Number(a.availableCopies) || 0);
-          bValue = (Number(b.availableCopies) || 0);
+          aValue = Number(a.availableCopies) || 0;
+          bValue = Number(b.availableCopies) || 0;
           break;
         case "borrowed":
-          aValue = (Number(a.totalCopies) || 0) - (Number(a.availableCopies) || 0);
-          bValue = (Number(b.totalCopies) || 0) - (Number(b.availableCopies) || 0);
+          aValue =
+            (Number(a.totalCopies) || 0) - (Number(a.availableCopies) || 0);
+          bValue =
+            (Number(b.totalCopies) || 0) - (Number(b.availableCopies) || 0);
           break;
         default:
           aValue = (a.title || "").toLowerCase();
@@ -150,8 +152,8 @@ const ManageBookModern = () => {
         {/* Header Section */}
         <div className="mb-8 pt-6 md:pt-8">
           <h1
-            className={`text-3xl md:text-4xl font-bold ${
-              isDark ? "text-white" : "text-gray-900"
+            className={`text-3xl font-bold ${
+              isDark ? "text-white" : "text-blue-600"
             } mb-2`}
           >
             Book Management
@@ -425,9 +427,21 @@ const ManageBookModern = () => {
           </div>
 
           {loading ? (
-            <div className={`text-center py-12 ${isDark ? "text-gray-300" : "text-gray-600"}`}>Loading books...</div>
+            <div
+              className={`text-center py-12 ${
+                isDark ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
+              Loading books...
+            </div>
           ) : error ? (
-            <div className={`text-center py-12 ${isDark ? "text-red-300" : "text-red-600"}`}>{error}</div>
+            <div
+              className={`text-center py-12 ${
+                isDark ? "text-red-300" : "text-red-600"
+              }`}
+            >
+              {error}
+            </div>
           ) : filteredBooks.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredBooks.map((book) => (

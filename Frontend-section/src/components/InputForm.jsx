@@ -5,20 +5,42 @@ import { MdEmail, MdLock } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { FaBookOpen } from "react-icons/fa";
 import { authAPI } from "@/services/api";
+import toast from "react-hot-toast";
 
 const InputForm = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
 
+  // Email validation helper
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const emailInput = e.target.email;
+    const passwordInput = e.target.password;
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!email) {
+      toast.error("Email address is required.");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      toast.error("Invalid email format. Please enter a valid email address.");
+      return;
+    }
+    if (!password) {
+      toast.error("Password is required.");
+      return;
+    }
+
     setIsLoading(true);
-    const email = e.target.email.value;
-    const password = e.target.password.value;
 
     try {
       const response = await authAPI.login({ email, password });
@@ -35,7 +57,7 @@ const InputForm = () => {
         navigate("/student");
       }
     } catch (err) {
-      setError(
+      toast.error(
         err.response?.data?.message || "Login failed. Please try again."
       );
     } finally {
@@ -45,7 +67,7 @@ const InputForm = () => {
 
   return (
     <div className="w-full max-w-md">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
         <div className="group relative">
           <label
             className={`absolute left-10 top-3 text-gray-600 font-medium transition-all duration-300 pointer-events-none ${
@@ -70,7 +92,6 @@ const InputForm = () => {
               type="email"
               name="email"
               id="email"
-              required
               autoComplete="username"
               placeholder=""
               onFocus={() => setEmailFocused(true)}
@@ -102,7 +123,6 @@ const InputForm = () => {
               type={showPassword ? "text" : "password"}
               name="password"
               id="password"
-              required
               autoComplete="current-password"
               placeholder=""
               onFocus={() => setPasswordFocused(true)}
@@ -122,14 +142,6 @@ const InputForm = () => {
             </button>
           </div>
         </div>
-        {error && (
-          <div className="text-red-600 text-sm text-center bg-red-50/80 backdrop-blur-sm p-4 rounded-xl border border-red-200 animate-fade-in-up shadow-lg">
-            <div className="flex items-center justify-center gap-2">
-              <FaBookOpen className="text-red-500" size={16} />
-              {error}
-            </div>
-          </div>
-        )}
         <Button
           type="submit"
           disabled={isLoading}
@@ -147,7 +159,15 @@ const InputForm = () => {
             </div>
           )}
         </Button>
-        <p className="text-center text-gray-700 mt-6">
+        <p className="text-center text-gray-700 mt-4">
+          <Link
+            to="/forgot-password"
+            className="text-blue-600 font-semibold hover:text-blue-800 transition-colors duration-200"
+          >
+            Forgot Password?
+          </Link>
+        </p>
+        <p className="text-center text-gray-700 mt-2">
           New to our library?{" "}
           <Link
             to="/signup"

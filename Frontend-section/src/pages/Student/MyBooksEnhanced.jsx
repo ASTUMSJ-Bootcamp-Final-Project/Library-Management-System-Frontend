@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { FaBook, FaCalendarAlt, FaClock, FaUndo, FaExclamationTriangle, FaCheckCircle, FaTimes } from "react-icons/fa";
+import {
+  FaBook,
+  FaCalendarAlt,
+  FaClock,
+  FaUndo,
+  FaExclamationTriangle,
+  FaCheckCircle,
+  FaTimes,
+} from "react-icons/fa";
 import { borrowAPI, utils } from "@/services/api";
 import toast from "react-hot-toast";
 import UserBorrowingHistory from "@/components/UserBorrowingHistory";
@@ -23,8 +31,10 @@ const MyBooksEnhanced = () => {
       setBorrowingStatus(response.data);
       setError(null);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch borrowing status');
-      console.error('Error fetching borrowing status:', err);
+      setError(
+        err.response?.data?.message || "Failed to fetch borrowing status"
+      );
+      console.error("Error fetching borrowing status:", err);
     } finally {
       setLoading(false);
     }
@@ -32,29 +42,35 @@ const MyBooksEnhanced = () => {
 
   const handleReturnBook = async (borrowId) => {
     try {
-      setActionLoading(prev => ({ ...prev, [borrowId]: true }));
+      setActionLoading((prev) => ({ ...prev, [borrowId]: true }));
       await borrowAPI.returnBook(borrowId);
       await fetchBorrowingStatus(); // Refresh data
-      toast.success('Return request submitted successfully! Please wait for admin confirmation.');
+      toast.success(
+        "Return request submitted successfully! Please wait for admin confirmation."
+      );
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to submit return request');
-      console.error('Error submitting return request:', err);
+      toast.error(
+        err.response?.data?.message || "Failed to submit return request"
+      );
+      console.error("Error submitting return request:", err);
     } finally {
-      setActionLoading(prev => ({ ...prev, [borrowId]: false }));
+      setActionLoading((prev) => ({ ...prev, [borrowId]: false }));
     }
   };
 
   const handleCancelReservation = async (borrowId) => {
     try {
-      setActionLoading(prev => ({ ...prev, [borrowId]: true }));
+      setActionLoading((prev) => ({ ...prev, [borrowId]: true }));
       await borrowAPI.cancelReservation(borrowId);
       await fetchBorrowingStatus(); // Refresh data
-      toast.success('Reservation cancelled successfully!');
+      toast.success("Reservation cancelled successfully!");
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to cancel reservation');
-      console.error('Error cancelling reservation:', err);
+      toast.error(
+        err.response?.data?.message || "Failed to cancel reservation"
+      );
+      console.error("Error cancelling reservation:", err);
     } finally {
-      setActionLoading(prev => ({ ...prev, [borrowId]: false }));
+      setActionLoading((prev) => ({ ...prev, [borrowId]: false }));
     }
   };
 
@@ -85,7 +101,7 @@ const MyBooksEnhanced = () => {
   const allBooks = [
     ...(borrowingStatus?.activeBorrows || []),
     ...(borrowingStatus?.activeReservations || []),
-    ...(borrowingStatus?.returnRequestedBooks || [])
+    ...(borrowingStatus?.returnRequestedBooks || []),
   ];
 
   return (
@@ -100,78 +116,160 @@ const MyBooksEnhanced = () => {
           My Books
         </h2>
         <p className={isDark ? "text-gray-300" : "text-gray-600"}>
-          {borrowingStatus?.totalBorrowed || 0} borrowed, {borrowingStatus?.totalReserved || 0} reserved, {borrowingStatus?.totalReturnRequested || 0} return requested
+          {borrowingStatus?.totalBorrowed || 0} borrowed,{" "}
+          {borrowingStatus?.totalReserved || 0} reserved,{" "}
+          {borrowingStatus?.totalReturnRequested || 0} return requested
         </p>
       </div>
 
       {/* Borrowing Status Summary */}
       {borrowingStatus && (
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-          <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-blue-50"} border-l-4 border-blue-500`}>
+          <div
+            className={`p-4 rounded-lg ${
+              isDark ? "bg-gray-700" : "bg-blue-50"
+            } border-l-4 border-blue-500`}
+          >
             <div className="flex items-center">
-              <FaBook className={`text-2xl ${isDark ? "text-blue-400" : "text-blue-600"} mr-3`} />
+              <FaBook
+                className={`text-2xl ${
+                  isDark ? "text-blue-400" : "text-blue-600"
+                } mr-3`}
+              />
               <div>
-                <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-blue-900"}`}>
+                <div
+                  className={`text-2xl font-bold ${
+                    isDark ? "text-white" : "text-blue-900"
+                  }`}
+                >
                   {borrowingStatus.totalBorrowed}
                 </div>
-                <div className={`text-sm ${isDark ? "text-gray-300" : "text-blue-700"} text-center`}>
+                <div
+                  className={`text-sm ${
+                    isDark ? "text-gray-300" : "text-blue-700"
+                  } text-center`}
+                >
                   Borrowed
                 </div>
               </div>
             </div>
           </div>
-          
-          <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-yellow-50"} border-l-4 border-yellow-500`}>
+
+          <div
+            className={`p-4 rounded-lg ${
+              isDark ? "bg-gray-700" : "bg-yellow-50"
+            } border-l-4 border-yellow-500`}
+          >
             <div className="flex items-center">
-              <FaClock className={`text-2xl ${isDark ? "text-yellow-400" : "text-yellow-600"} mr-3`} />
+              <FaClock
+                className={`text-2xl ${
+                  isDark ? "text-yellow-400" : "text-yellow-600"
+                } mr-3`}
+              />
               <div>
-                <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-yellow-900"}`}>
+                <div
+                  className={`text-2xl font-bold ${
+                    isDark ? "text-white" : "text-yellow-900"
+                  }`}
+                >
                   {borrowingStatus.totalReserved}
                 </div>
-                <div className={`text-sm ${isDark ? "text-gray-300" : "text-yellow-700"} text-center`}>
+                <div
+                  className={`text-sm ${
+                    isDark ? "text-gray-300" : "text-yellow-700"
+                  } text-center`}
+                >
                   Reserved
                 </div>
               </div>
             </div>
           </div>
 
-          <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-red-50"} border-l-4 border-red-500`}>
+          <div
+            className={`p-4 rounded-lg ${
+              isDark ? "bg-gray-700" : "bg-red-50"
+            } border-l-4 border-red-500`}
+          >
             <div className="flex items-center">
-              <FaExclamationTriangle className={`text-2xl ${isDark ? "text-red-400" : "text-red-600"} mr-3`} />
+              <FaExclamationTriangle
+                className={`text-2xl ${
+                  isDark ? "text-red-400" : "text-red-600"
+                } mr-3`}
+              />
               <div>
-                <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-red-900"}`}>
+                <div
+                  className={`text-2xl font-bold ${
+                    isDark ? "text-white" : "text-red-900"
+                  }`}
+                >
                   {borrowingStatus.overdueBooks}
                 </div>
-                <div className={`text-sm ${isDark ? "text-gray-300" : "text-red-700"} text-center`}>
+                <div
+                  className={`text-sm ${
+                    isDark ? "text-gray-300" : "text-red-700"
+                  } text-center`}
+                >
                   Overdue
                 </div>
               </div>
             </div>
           </div>
 
-          <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-green-50"} border-l-4 border-green-500`}>
+          <div
+            className={`p-4 rounded-lg ${
+              isDark ? "bg-gray-700" : "bg-green-50"
+            } border-l-4 border-green-500`}
+          >
             <div className="flex items-center">
-              <FaCheckCircle className={`text-2xl ${isDark ? "text-green-400" : "text-green-600"} mr-3`} />
+              <FaCheckCircle
+                className={`text-2xl ${
+                  isDark ? "text-green-400" : "text-green-600"
+                } mr-3`}
+              />
               <div>
-                <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-green-900"}`}>
+                <div
+                  className={`text-2xl font-bold ${
+                    isDark ? "text-white" : "text-green-900"
+                  }`}
+                >
                   {borrowingStatus.booksRemaining}
                 </div>
-                <div className={`text-sm ${isDark ? "text-gray-300" : "text-green-700"} text-center`}>
+                <div
+                  className={`text-sm ${
+                    isDark ? "text-gray-300" : "text-green-700"
+                  } text-center`}
+                >
                   Can Borrow
                 </div>
               </div>
             </div>
           </div>
 
-          <div className={`p-4 rounded-lg ${isDark ? "bg-gray-700" : "bg-purple-50"} border-l-4 border-purple-500`}>
+          <div
+            className={`p-4 rounded-lg ${
+              isDark ? "bg-gray-700" : "bg-purple-50"
+            } border-l-4 border-purple-500`}
+          >
             <div className="flex items-center">
-              <FaUndo className={`text-2xl ${isDark ? "text-purple-400" : "text-purple-600"} mr-3`} />
+              <FaUndo
+                className={`text-2xl ${
+                  isDark ? "text-purple-400" : "text-purple-600"
+                } mr-3`}
+              />
               <div>
-                <div className={`text-2xl font-bold ${isDark ? "text-white" : "text-purple-900"}`}>
+                <div
+                  className={`text-2xl font-bold ${
+                    isDark ? "text-white" : "text-purple-900"
+                  }`}
+                >
                   {borrowingStatus.totalReturnRequested || 0}
                 </div>
-                <div className={`text-sm ${isDark ? "text-gray-300" : "text-purple-700"} text-center`}>
-Return Requested
+                <div
+                  className={`text-sm ${
+                    isDark ? "text-gray-300" : "text-purple-700"
+                  } text-center`}
+                >
+                  Return Requested
                 </div>
               </div>
             </div>
@@ -184,20 +282,24 @@ Return Requested
         {allBooks.length > 0 ? (
           allBooks.map((borrow) => {
             const book = borrow.book;
-            const daysRemaining = borrow.dueDate ? utils.getDaysRemaining(borrow.dueDate) : null;
-            const isOverdue = borrow.dueDate ? utils.isOverdue(borrow.dueDate) : false;
-            
+            const daysRemaining = borrow.dueDate
+              ? utils.getDaysRemaining(borrow.dueDate)
+              : null;
+            const isOverdue = borrow.dueDate
+              ? utils.isOverdue(borrow.dueDate)
+              : false;
+
             return (
               <div
                 key={borrow._id}
                 className={`rounded-lg p-4 ${
                   isDark ? "bg-gray-700" : "bg-white"
                 } shadow-md border-l-4 ${
-                  borrow.status === 'overdue' || isOverdue
+                  borrow.status === "overdue" || isOverdue
                     ? "border-red-500"
-                    : borrow.status === 'reserved'
+                    : borrow.status === "reserved"
                     ? "border-yellow-500"
-                    : borrow.status === 'return_requested'
+                    : borrow.status === "return_requested"
                     ? "border-purple-500"
                     : daysRemaining && daysRemaining <= 3
                     ? "border-orange-500"
@@ -231,7 +333,11 @@ Return Requested
 
                     {/* Status Badge */}
                     <div className="mb-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${utils.getStatusColor(borrow.status)}`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${utils.getStatusColor(
+                          borrow.status
+                        )}`}
+                      >
                         {utils.getStatusText(borrow.status)}
                       </span>
                     </div>
@@ -241,7 +347,9 @@ Return Requested
                       {borrow.borrowDate && (
                         <div className="flex items-center space-x-2">
                           <FaCalendarAlt
-                            className={isDark ? "text-blue-400" : "text-blue-600"}
+                            className={
+                              isDark ? "text-blue-400" : "text-blue-600"
+                            }
                           />
                           <span
                             className={`text-sm ${
@@ -255,7 +363,9 @@ Return Requested
                       {borrow.dueDate && (
                         <div className="flex items-center space-x-2">
                           <FaClock
-                            className={isDark ? "text-blue-400" : "text-blue-600"}
+                            className={
+                              isDark ? "text-blue-400" : "text-blue-600"
+                            }
                           />
                           <span
                             className={`text-sm ${
@@ -269,14 +379,17 @@ Return Requested
                       {borrow.reservationExpiry && (
                         <div className="flex items-center space-x-2">
                           <FaClock
-                            className={isDark ? "text-yellow-400" : "text-yellow-600"}
+                            className={
+                              isDark ? "text-yellow-400" : "text-yellow-600"
+                            }
                           />
                           <span
                             className={`text-sm ${
                               isDark ? "text-gray-300" : "text-gray-600"
                             }`}
                           >
-                            Expires: {utils.formatDateTime(borrow.reservationExpiry)}
+                            Expires:{" "}
+                            {utils.formatDateTime(borrow.reservationExpiry)}
                           </span>
                         </div>
                       )}
@@ -294,17 +407,16 @@ Return Requested
                               : "text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-200"
                           }`}
                         >
-                          {isOverdue 
+                          {isOverdue
                             ? `${Math.abs(daysRemaining)} days overdue`
-                            : `${daysRemaining} days remaining`
-                          }
+                            : `${daysRemaining} days remaining`}
                         </span>
                       </div>
                     )}
 
                     {/* Actions */}
                     <div className="flex space-x-2">
-                      {borrow.status === 'borrowed' && (
+                      {borrow.status === "borrowed" && (
                         <button
                           onClick={() => handleReturnBook(borrow._id)}
                           disabled={actionLoading[borrow._id]}
@@ -317,10 +429,12 @@ Return Requested
                           }`}
                         >
                           <FaUndo className="inline mr-1" />
-                          {actionLoading[borrow._id] ? "Submitting..." : "Request Return"}
+                          {actionLoading[borrow._id]
+                            ? "Submitting..."
+                            : "Request Return"}
                         </button>
                       )}
-                      {borrow.status === 'reserved' && (
+                      {borrow.status === "reserved" && (
                         <>
                           <span className="px-3 py-1 rounded-lg text-sm font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
                             <FaClock className="inline mr-1" />
@@ -338,11 +452,13 @@ Return Requested
                             }`}
                           >
                             <FaTimes className="inline mr-1" />
-                            {actionLoading[borrow._id] ? "Cancelling..." : "Cancel"}
+                            {actionLoading[borrow._id]
+                              ? "Cancelling..."
+                              : "Cancel"}
                           </button>
                         </>
                       )}
-                      {borrow.status === 'return_requested' && (
+                      {borrow.status === "return_requested" && (
                         <span className="px-3 py-1 rounded-lg text-sm font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
                           <FaClock className="inline mr-1" />
                           Return Requested - Awaiting Admin Confirmation
