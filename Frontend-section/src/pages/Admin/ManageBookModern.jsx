@@ -1,5 +1,6 @@
 import AdminSidebar from "@/components/AdminSidebar";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useSidebar } from "@/contexts/SidebarContext";
 import React, { useState, useMemo, useEffect } from "react";
 import { booksAPI } from "@/services/api";
 import BookCardEnhanced from "@/components/BookCardEnhanced";
@@ -26,6 +27,7 @@ const ManageBookModern = () => {
   const [sortBy, setSortBy] = useState("title");
   const [sortOrder, setSortOrder] = useState("asc");
   const { isDark } = useTheme();
+  const { isMobile, mobileSidebarOpen, collapsed } = useSidebar();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -146,8 +148,10 @@ const ManageBookModern = () => {
       }`}
     >
       <AdminSidebar />
-      <main className="flex-1 px-6 py-6">
-        <Navbar />
+      <main className={`flex-1 transition-all duration-300 ${isMobile ? 'px-2' : 'px-6'} py-6 ${
+        isMobile && mobileSidebarOpen ? 'transform translate-x-64' : ''
+      } ${!isMobile ? (collapsed ? 'ml-16' : 'ml-64') : ''}`}>
+        {!(isMobile && mobileSidebarOpen) && <Navbar />}
 
         {/* Header Section */}
         <div className="mb-8 pt-6 md:pt-8">

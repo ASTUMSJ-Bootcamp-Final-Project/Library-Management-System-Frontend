@@ -1,5 +1,6 @@
 import AdminSidebar from "@/components/AdminSidebar";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useSidebar } from "@/contexts/SidebarContext";
 import React, { useState, useEffect, useMemo } from "react";
 import BookCard from "@/components/BookCard";
 import { booksAPI } from "@/services/api";
@@ -14,6 +15,7 @@ const ManageBook = () => {
   const [sortBy, setSortBy] = useState("title");
   const [sortOrder, setSortOrder] = useState("asc");
   const { isDark } = useTheme();
+  const { isMobile, mobileSidebarOpen, collapsed } = useSidebar();
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -89,8 +91,10 @@ const ManageBook = () => {
   return (
     <div className={`flex flex-row min-h-screen ${isDark ? "bg-gray-900" : "bg-gray-100"}`}>
       <AdminSidebar />
-      <main className="flex-1 px-6 py-3">
-        <Navbar />
+      <main className={`flex-1 transition-all duration-300 ${isMobile ? 'px-2' : 'px-6'} py-3 ${
+        isMobile && mobileSidebarOpen ? 'transform translate-x-64' : ''
+      } ${!isMobile ? (collapsed ? 'ml-16' : 'ml-64') : ''}`}>
+        {!(isMobile && mobileSidebarOpen) && <Navbar />}
         <h1
           className={`text-3xl font-bold ${
             isDark ? "text-white" : "text-blue-600"

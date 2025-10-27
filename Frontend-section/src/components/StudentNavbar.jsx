@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { FaUser } from "react-icons/fa";
+import { useSidebar } from "@/contexts/SidebarContext";
+import { FaUser, FaBars } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.jpg";
 
 const StudentNavbar = () => {
   const { isDark } = useTheme();
+  const { isMobile, toggleSidebar, mobileSidebarOpen } = useSidebar();
   const navigate = useNavigate();
   const data = localStorage.getItem("user");
   const student = JSON.parse(data);
@@ -30,6 +32,20 @@ const StudentNavbar = () => {
               : "bg-white/30 border-gray-200/50 text-gray-800 shadow-lg shadow-gray-200/20"
           }`}
         >
+        {/* Mobile Menu Button */}
+        {isMobile && (
+          <button
+            onClick={toggleSidebar}
+            className={`p-2 rounded-lg transition-all duration-200 ${
+              isDark
+                ? "text-gray-400 hover:text-white hover:bg-gray-700"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            }`}
+          >
+            <FaBars className="text-lg" />
+          </button>
+        )}
+
         {/* Logo */}
         <div className="flex items-center gap-3 mr-4">
           <img src={logo} alt="Logo" className="w-8 h-8 rounded-full" />
