@@ -60,6 +60,7 @@ const quickActions = [
     color: "bg-purple-500 hover:bg-purple-600",
   },
 ];
+// Example chart data
 
 const AdminDashboardModern = () => {
   const { isDark } = useTheme();
@@ -201,6 +202,15 @@ const AdminDashboardModern = () => {
       books: counts[index],
     }));
   }, [books]);
+  // console.log(booksAddedData);
+  const bookAddedData = [
+    { month: "Jan", books: 40 },
+    { month: "Feb", books: 55 },
+    { month: "Mar", books: 32 },
+    { month: "Apr", books: 60 },
+    { month: "May", books: 48 },
+    { month: "Jun", books: 70 },
+  ];
 
   const recentActivities = useMemo(() => {
     return recent.map((r) => ({

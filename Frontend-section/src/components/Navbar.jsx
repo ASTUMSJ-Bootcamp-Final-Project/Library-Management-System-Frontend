@@ -1,9 +1,5 @@
 import React, { useState } from "react";
-import {
-  FaUserCircle,
-  FaBars,
-  FaTimes,
-} from "react-icons/fa";
+import { FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 // Removed ThemeToggle from Navbar to avoid duplication with Sidebar
 import { useTheme } from "@/contexts/ThemeContext";
@@ -15,7 +11,6 @@ const Navbar = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const location = useLocation();
   const navigate = useNavigate();
-
 
   const displayName = user.username
     ? user.username.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
@@ -85,7 +80,7 @@ const Navbar = () => {
             {/* User profile */}
             <div className="flex items-center space-x-2">
               <button
-                onClick={() => navigate('/admin/profile')}
+                onClick={() => navigate("/admin/profile")}
                 className={`p-2 rounded-full ${
                   isDark ? "bg-gray-800" : "bg-gray-100"
                 } hover:opacity-90 transition-opacity`}
@@ -130,8 +125,8 @@ const Navbar = () => {
         {isMenuOpen && (
           <div
             className={`md:hidden mt-4 rounded-2xl backdrop-blur-md border py-4 ${
-              isDark 
-                ? "bg-gray-900/30 border-gray-700/50 shadow-lg shadow-gray-900/20" 
+              isDark
+                ? "bg-gray-900/30 border-gray-700/50 shadow-lg shadow-gray-900/20"
                 : "bg-white/30 border-gray-200/50 shadow-lg shadow-gray-200/20"
             }`}
           >

@@ -28,8 +28,9 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const { data } = await authAPI.getProfile();
+        // console.log(data);
         if (isMounted) {
-          setProfile(data); // ✅ Always trust backend status
+          setProfile(data);
         }
       } catch (err) {
         if (isMounted)
@@ -42,6 +43,7 @@ const Profile = () => {
     const fetchBorrowingStatus = async () => {
       try {
         const { data } = await borrowAPI.getUserBorrowingStatus();
+        console.log(data);
         if (isMounted) setBorrowingStatus(data);
       } catch (err) {
         console.error("Error fetching borrowing status:", err);
@@ -79,7 +81,9 @@ const Profile = () => {
         {!loading && !error && profile && (
           <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 space-y-4">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Username</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Username
+              </p>
               <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
                 {profile.username}
               </p>
@@ -119,84 +123,84 @@ const Profile = () => {
               </div>
             )}
 
-           {profile.membershipStatus === "pending" && (
-  <div className="p-4 rounded-lg border border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-900/20">
-    <div className="flex items-center gap-2 mb-3">
-      <FaExclamationTriangle className="text-orange-600 dark:text-orange-400 text-xl" />
-      <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200">
-        Membership Activation Required
-      </h3>
-    </div>
-    <p className="text-sm text-orange-700 dark:text-orange-300 mb-4">
-      Your membership request has been received ✅  
-      To continue, please complete the subscription payment below.
-    </p>
+            {profile.membershipStatus === "pending" && (
+              <div className="p-4 rounded-lg border border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-900/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <FaExclamationTriangle className="text-orange-600 dark:text-orange-400 text-xl" />
+                  <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200">
+                    Membership Activation Required
+                  </h3>
+                </div>
+                <p className="text-sm text-orange-700 dark:text-orange-300 mb-4">
+                  Your membership request has been received ✅ To continue,
+                  please complete the subscription payment below.
+                </p>
 
-    <button
-      onClick={() => setShowPaymentModal(true)}
-      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-    >
-      <FaCreditCard />
-      Complete Payment
-    </button>
-  </div>
-)}
+                <button
+                  onClick={() => setShowPaymentModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                >
+                  <FaCreditCard />
+                  Complete Payment
+                </button>
+              </div>
+            )}
 
-{profile.membershipStatus === "waiting_for_approval" && (
-  <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20">
-    <div className="flex items-center gap-2 mb-2">
-      <FaClock className="text-blue-600 dark:text-blue-400 text-xl" />
-      <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
-        Reviewing Your Membership
-      </h3>
-    </div>
-    <p className="text-sm text-blue-700 dark:text-blue-300">
-      ✅ We received your payment proof  
-      🔍 Our team is currently verifying your submission  
-      ⏳ You’ll be approved soon — thank you for your patience!
-    </p>
-  </div>
-)}
+            {profile.membershipStatus === "waiting_for_approval" && (
+              <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <FaClock className="text-blue-600 dark:text-blue-400 text-xl" />
+                  <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
+                    Reviewing Your Membership
+                  </h3>
+                </div>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  ✅ We received your payment proof 🔍 Our team is currently
+                  verifying your submission ⏳ You’ll be approved soon — thank
+                  you for your patience!
+                </p>
+              </div>
+            )}
 
-{profile.membershipStatus === "approved" && (
-  <div className="p-4 rounded-lg border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20">
-    <div className="flex items-center gap-2 mb-2">
-      <FaCheckCircle className="text-green-600 dark:text-green-400 text-xl" />
-      <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
-        Membership Approved ✅
-      </h3>
-    </div>
-    <p className="text-sm text-green-700 dark:text-green-300">
-      🎉 Welcome! You now have full access to borrow books and enjoy all member benefits.
-    </p>
-  </div>
-)}
+            {profile.membershipStatus === "approved" && (
+              <div className="p-4 rounded-lg border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <FaCheckCircle className="text-green-600 dark:text-green-400 text-xl" />
+                  <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
+                    Membership Approved ✅
+                  </h3>
+                </div>
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  🎉 Welcome! You now have full access to borrow books and enjoy
+                  all member benefits.
+                </p>
+              </div>
+            )}
 
-{profile.membershipStatus === "canceled" && (
-  <div className="p-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
-    <div className="flex items-center gap-2 mb-3">
-      <FaExclamationTriangle className="text-red-600 dark:text-red-400 text-xl" />
-      <h3 className="text-lg font-semibold text-red-800 dark:text-red-200">
-        Membership Not Active
-      </h3>
-    </div>
-    <p className="text-sm text-red-700 dark:text-red-300 mb-4">
-      Your previous request was canceled.  
-      You can easily start the process again below.
-    </p>
+            {profile.membershipStatus === "canceled" && (
+              <div className="p-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <FaExclamationTriangle className="text-red-600 dark:text-red-400 text-xl" />
+                  <h3 className="text-lg font-semibold text-red-800 dark:text-red-200">
+                    Membership Not Active
+                  </h3>
+                </div>
+                <p className="text-sm text-red-700 dark:text-red-300 mb-4">
+                  Your previous request was canceled. You can easily start the
+                  process again below.
+                </p>
 
-    <button
-      onClick={() => {
-        toast.success("Restarting subscription process");
-        setShowPaymentModal(true);
-      }}
-      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-    >
-      Reapply for Membership
-    </button>
-  </div>
-)}
-
+                <button
+                  onClick={() => {
+                    toast.success("Restarting subscription process");
+                    setShowPaymentModal(true);
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                >
+                  Reapply for Membership
+                </button>
+              </div>
+            )}
 
             {/* Delete Account Button */}
             <div className="pt-4">
