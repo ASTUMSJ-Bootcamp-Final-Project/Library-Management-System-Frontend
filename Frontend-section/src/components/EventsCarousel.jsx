@@ -56,6 +56,7 @@ const EventsCarousel = () => {
   const [events, setEvents] = useState(() => {
     try {
       const savedEvents = localStorage.getItem("library-events");
+      // console.log(JSON.parse(savedEvents));
       return savedEvents ? JSON.parse(savedEvents) : defaultEvents;
     } catch (error) {
       console.error("Error loading events from localStorage:", error);

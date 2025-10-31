@@ -52,27 +52,34 @@ const AddBook = () => {
     const file = e.target.files[0];
     if (file) {
       // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setErrors(prev => ({ ...prev, coverImage: 'Please select a valid image file' }));
+
+      if (!file.type.startsWith("image/")) {
+        setErrors((prev) => ({
+          ...prev,
+          coverImage: "Please select a valid image file",
+        }));
         return;
       }
-      
+
       // Validate file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
-        setErrors(prev => ({ ...prev, coverImage: 'Image size must be less than 5MB' }));
+        setErrors((prev) => ({
+          ...prev,
+          coverImage: "Image size must be less than 5MB",
+        }));
         return;
       }
 
       setCoverImage(file);
       setImagePreview(URL.createObjectURL(file));
-      setErrors(prev => ({ ...prev, coverImage: '' }));
+      setErrors((prev) => ({ ...prev, coverImage: "" }));
     }
   };
 
   const removeImage = () => {
     setCoverImage(null);
     setImagePreview(null);
-    setErrors(prev => ({ ...prev, coverImage: '' }));
+    setErrors((prev) => ({ ...prev, coverImage: "" }));
   };
 
   const validateForm = () => {
@@ -125,7 +132,9 @@ const AddBook = () => {
       toast.success("Book added successfully!");
     } catch (error) {
       console.error("Error adding book:", error);
-      toast.error(error.response?.data?.message || "Failed to add book. Please try again.");
+      toast.error(
+        error.response?.data?.message || "Failed to add book. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -309,7 +318,6 @@ const AddBook = () => {
                       </p>
                     )}
                   </div>
-
                 </div>
 
                 {/* Cover Image Upload */}
@@ -317,11 +325,15 @@ const AddBook = () => {
                   <Label className={isDark ? "text-white" : ""}>
                     Cover Image
                   </Label>
-                  
+
                   {!imagePreview ? (
                     <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
                       <FaImage className="mx-auto text-4xl text-gray-400 mb-4" />
-                      <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"} mb-4`}>
+                      <p
+                        className={`text-sm ${
+                          isDark ? "text-gray-400" : "text-gray-600"
+                        } mb-4`}
+                      >
                         Upload a book cover image (JPG, PNG, GIF - Max 5MB)
                       </p>
                       <input
@@ -359,7 +371,7 @@ const AddBook = () => {
                       </button>
                     </div>
                   )}
-                  
+
                   {errors.coverImage && (
                     <p className="text-red-500 text-sm">{errors.coverImage}</p>
                   )}

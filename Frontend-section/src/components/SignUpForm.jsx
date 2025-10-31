@@ -9,7 +9,6 @@ import toast from "react-hot-toast";
 
 const SignUpForm = () => {
   const navigate = useNavigate();
-  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -20,6 +19,12 @@ const SignUpForm = () => {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [confirmFocused, setConfirmFocused] = useState(false);
+
+  // Email validation helper
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,23 +37,46 @@ const SignUpForm = () => {
     const confirmPassword = formData.get("confirmPassword")?.trim();
     const terms = formData.get("terms") === "on";
 
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      setError("All fields are required.");
+    if (!firstName) {
+      toast.error("First name is required.");
+      setIsLoading(false);
+      return;
+    }
+    if (!lastName) {
+      toast.error("Last name is required.");
+      setIsLoading(false);
+      return;
+    }
+    if (!email) {
+      toast.error("Email address is required.");
+      setIsLoading(false);
+      return;
+    }
+    if (!isValidEmail(email)) {
+      toast.error("Invalid email format. Please enter a valid email address.");
+      setIsLoading(false);
+      return;
+    }
+    if (!password) {
+      toast.error("Password is required.");
+      setIsLoading(false);
+      return;
+    }
+    if (!confirmPassword) {
+      toast.error("Password confirmation is required.");
       setIsLoading(false);
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      toast.error("Passwords do not match.");
       setIsLoading(false);
       return;
     }
     if (!terms) {
-      setError("You must agree to the terms.");
+      toast.error("You must agree to the terms and conditions.");
       setIsLoading(false);
       return;
     }
-
-    setError(""); // Clear previous errors
 
     const username = `${firstName} ${lastName}`;
     const payload = {
@@ -66,7 +94,7 @@ const SignUpForm = () => {
       navigate("/");
     } catch (err) {
       console.error("Signup error:", err);
-      setError(
+      toast.error(
         err.response?.data?.message || "Signup failed. Please try again."
       );
     } finally {
@@ -103,7 +131,6 @@ const SignUpForm = () => {
                 name="firstName"
                 id="firstName"
                 placeholder=""
-                required
                 autoComplete="given-name"
                 onFocus={() => setFirstNameFocused(true)}
                 onBlur={(e) => setFirstNameFocused(e.target.value !== "")}
@@ -135,7 +162,6 @@ const SignUpForm = () => {
                 name="lastName"
                 id="lastName"
                 placeholder=""
-                required
                 autoComplete="family-name"
                 onFocus={() => setLastNameFocused(true)}
                 onBlur={(e) => setLastNameFocused(e.target.value !== "")}
@@ -168,7 +194,6 @@ const SignUpForm = () => {
               name="email"
               id="email"
               placeholder=""
-              required
               autoComplete="username"
               onFocus={() => setEmailFocused(true)}
               onBlur={(e) => setEmailFocused(e.target.value !== "")}
@@ -200,7 +225,6 @@ const SignUpForm = () => {
               name="password"
               id="password"
               placeholder=""
-              required
               autoComplete="new-password"
               onFocus={() => setPasswordFocused(true)}
               onBlur={(e) => setPasswordFocused(e.target.value !== "")}
@@ -245,7 +269,6 @@ const SignUpForm = () => {
               name="confirmPassword"
               id="confirmPassword"
               placeholder=""
-              required
               autoComplete="new-password"
               onFocus={() => setConfirmFocused(true)}
               onBlur={(e) => setConfirmFocused(e.target.value !== "")}
@@ -266,35 +289,18 @@ const SignUpForm = () => {
         </div>
 
         <div className="flex items-center mb-2">
-          <input
-            type="checkbox"
-            name="terms"
-            id="terms"
-            className="mr-2"
-            required
-          />
+          <input type="checkbox" name="terms" id="terms" className="mr-2" />
           <label htmlFor="terms" className="text-gray-700 text-sm">
             I agree to the{" "}
-            <a
-              href="#"
-              className="text-blue-600 font-semibold hover:underline"
-            >
+            <a href="#" className="text-blue-600 font-semibold hover:underline">
               Terms of Service
             </a>{" "}
             and{" "}
-            <a
-              href="#"
-              className="text-blue-600 font-semibold hover:underline"
-            >
+            <a href="#" className="text-blue-600 font-semibold hover:underline">
               Privacy Policy
             </a>
           </label>
         </div>
-        {error && (
-          <div className="text-red-600 text-sm text-center bg-red-50/80 backdrop-blur-sm p-4 rounded-xl border border-red-200 animate-fade-in-up shadow-lg">
-            {error}
-          </div>
-        )}
         <Button
           type="submit"
           disabled={isLoading}

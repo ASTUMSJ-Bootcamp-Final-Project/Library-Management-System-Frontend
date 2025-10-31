@@ -3,12 +3,13 @@ import { Route, Routes } from "react-router-dom";
 import AdminDashboard from "./pages/Admin/AdminDashboardModern";
 import StudentDashboard from "./pages/Student/StudentDashboardEnhanced";
 import Auth from "./pages/Auth/Auth";
+import ForgotPassword from "./pages/Auth/ForgotPassword";
 import ManageUsers from "./pages/Admin/ManageUsers";
 import AddBook from "./pages/Admin/AddBook";
 import Orders from "./pages/Admin/Orders";
 import ManageBook from "./pages/Admin/ManageBookModern";
 import Bookdetail from "./pages/Admin/Bookdetail";
-import StudentBookDetail from "./pages/Student/BookDetail";
+// import StudentBookDetail from "./pages/Student/BookDetail";
 import BrowseBooks from "./pages/Student/BrowseBooks";
 import PrivateRoute from "@/routes/PrivateRoute";
 import { Toaster } from "react-hot-toast";
@@ -47,6 +48,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Auth mode="login" />} />
           <Route path="/signup" element={<Auth mode="signup" />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Admin Routes */}
           <Route

@@ -24,24 +24,13 @@ const Profile = () => {
 
   useEffect(() => {
     let isMounted = true;
+
     const fetchProfile = async () => {
       try {
         const { data } = await authAPI.getProfile();
+        // console.log(data);
         if (isMounted) {
-          // Check if there's an updated status in localStorage
-          const userData = JSON.parse(localStorage.getItem("user") || "{}");
-          if (
-            userData.membershipStatus &&
-            userData.membershipStatus !== data.membershipStatus
-          ) {
-            // Use the updated status from localStorage
-            setProfile({
-              ...data,
-              membershipStatus: userData.membershipStatus,
-            });
-          } else {
-            setProfile(data);
-          }
+          setProfile(data);
         }
       } catch (err) {
         if (isMounted)
@@ -50,14 +39,13 @@ const Profile = () => {
         if (isMounted) setLoading(false);
       }
     };
+
     const fetchBorrowingStatus = async () => {
       try {
         const { data } = await borrowAPI.getUserBorrowingStatus();
-        if (isMounted) {
-          setBorrowingStatus(data);
-        }
+        console.log(data);
+        if (isMounted) setBorrowingStatus(data);
       } catch (err) {
-        // Ignore borrowing status errors, not critical for profile
         console.error("Error fetching borrowing status:", err);
       }
     };
@@ -106,136 +94,115 @@ const Profile = () => {
                 {profile.email}
               </p>
             </div>
+
             {profile.membershipStatus && (
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Membership Status
                 </p>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      profile.membershipStatus === "approved"
-                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                        : profile.membershipStatus === "pending" ||
-                          profile.membershipStatus === "waiting_for_approval"
-                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                        : profile.membershipStatus === "canceled"
-                        ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
-                    }`}
-                  >
-                    {profile.membershipStatus === "approved"
-                      ? "Active"
-                      : profile.membershipStatus === "pending"
-                      ? "Pending"
-                      : profile.membershipStatus === "waiting_for_approval"
-                      ? "Waiting for Approval"
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    profile.membershipStatus === "approved"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                      : profile.membershipStatus === "pending" ||
+                        profile.membershipStatus === "waiting_for_approval"
+                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
                       : profile.membershipStatus === "canceled"
-                      ? "Inactive"
-                      : profile.membershipStatus}
-                  </span>
-                </div>
+                      ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                  }`}
+                >
+                  {profile.membershipStatus === "approved"
+                    ? "Active"
+                    : profile.membershipStatus === "pending"
+                    ? "Pending"
+                    : profile.membershipStatus === "waiting_for_approval"
+                    ? "Waiting for Approval"
+                    : "Inactive"}
+                </span>
               </div>
             )}
 
-            {/* Subscription Section for Pending Users */}
             {profile.membershipStatus === "pending" && (
-              <div
-                className={`p-4 rounded-lg border ${
-                  profile.membershipStatus === "pending"
-                    ? "border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-900/20"
-                    : "border-gray-200 dark:border-gray-700"
-                }`}
-              >
+              <div className="p-4 rounded-lg border border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-900/20">
                 <div className="flex items-center gap-2 mb-3">
-                  <FaExclamationTriangle className="text-orange-600 dark:text-orange-400" />
-                  <h3 className="text-lg font-medium text-orange-800 dark:text-orange-200">
-                    Membership Pending
+                  <FaExclamationTriangle className="text-orange-600 dark:text-orange-400 text-xl" />
+                  <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200">
+                    Membership Activation Required
                   </h3>
                 </div>
                 <p className="text-sm text-orange-700 dark:text-orange-300 mb-4">
-                  Your membership is currently pending approval. To activate
-                  your library membership, please subscribe to one of our
-                  membership plans.
+                  Your membership request has been received ✅ To continue,
+                  please complete the subscription payment below.
                 </p>
+
                 <button
                   onClick={() => setShowPaymentModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
                 >
                   <FaCreditCard />
-                  Subscribe Now
+                  Complete Payment
                 </button>
               </div>
             )}
 
-            {/* Waiting for Approval Section */}
             {profile.membershipStatus === "waiting_for_approval" && (
               <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20">
-                <div className="flex items-center gap-2 mb-3">
-                  <FaClock className="text-blue-600 dark:text-blue-400" />
-                  <h3 className="text-lg font-medium text-blue-800 dark:text-blue-200">
-                    Waiting for Approval
+                <div className="flex items-center gap-2 mb-2">
+                  <FaClock className="text-blue-600 dark:text-blue-400 text-xl" />
+                  <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
+                    Reviewing Your Membership
                   </h3>
                 </div>
-                <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
-                  Your payment proof has been submitted successfully. Your
-                  membership is now under review by our administrators. You will
-                  be notified once it's approved.
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  ✅ We received your payment proof 🔍 Our team is currently
+                  verifying your submission ⏳ You’ll be approved soon — thank
+                  you for your patience!
                 </p>
-                <div className="text-xs text-blue-600 dark:text-blue-400">
-                  Status: Under Review
-                </div>
               </div>
             )}
 
-            {/* Approved Section */}
             {profile.membershipStatus === "approved" && (
               <div className="p-4 rounded-lg border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20">
-                <div className="flex items-center gap-2 mb-3">
-                  <FaCheckCircle className="text-green-600 dark:text-green-400" />
-                  <h3 className="text-lg font-medium text-green-800 dark:text-green-200">
-                    Membership Approved
+                <div className="flex items-center gap-2 mb-2">
+                  <FaCheckCircle className="text-green-600 dark:text-green-400 text-xl" />
+                  <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
+                    Membership Approved ✅
                   </h3>
                 </div>
                 <p className="text-sm text-green-700 dark:text-green-300">
-                  Congratulations! Your membership has been approved. You can
-                  now borrow books from the library.
+                  🎉 Welcome! You now have full access to borrow books and enjoy
+                  all member benefits.
                 </p>
               </div>
             )}
 
-            {/* Canceled/Rejected Section */}
             {profile.membershipStatus === "canceled" && (
               <div className="p-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
                 <div className="flex items-center gap-2 mb-3">
-                  <FaExclamationTriangle className="text-red-600 dark:text-red-400" />
-                  <h3 className="text-lg font-medium text-red-800 dark:text-red-200">
-                    Membership Canceled
+                  <FaExclamationTriangle className="text-red-600 dark:text-red-400 text-xl" />
+                  <h3 className="text-lg font-semibold text-red-800 dark:text-red-200">
+                    Membership Not Active
                   </h3>
                 </div>
                 <p className="text-sm text-red-700 dark:text-red-300 mb-4">
-                  Your membership application was canceled. You can start the
-                  subscription process again.
+                  Your previous request was canceled. You can easily start the
+                  process again below.
                 </p>
+
                 <button
                   onClick={() => {
-                    // Reset status to pending to allow resubmission
-                    const userData = JSON.parse(
-                      localStorage.getItem("user") || "{}"
-                    );
-                    userData.membershipStatus = "pending";
-                    localStorage.setItem("user", JSON.stringify(userData));
-                    toast.success("Status reset. You can now subscribe again.");
-                    window.location.reload();
+                    toast.success("Restarting subscription process");
+                    setShowPaymentModal(true);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
                 >
-                  <FaCreditCard />
-                  Try Again
+                  Reapply for Membership
                 </button>
               </div>
             )}
 
+            {/* Delete Account Button */}
             <div className="pt-4">
               <button
                 className={`px-4 py-2 rounded text-white ${
@@ -251,14 +218,13 @@ const Profile = () => {
                     borrowingStatus.totalReserved > 0)
                 }
                 onClick={() => {
-                  // Check if user has active borrows
                   if (
                     borrowingStatus &&
                     (borrowingStatus.totalBorrowed > 0 ||
                       borrowingStatus.totalReserved > 0)
                   ) {
                     toast.error(
-                      "Cannot delete account. Please return all borrowed books and cancel reservations first."
+                      "Return all borrowed books and cancel reservations first."
                     );
                     return;
                   }
@@ -268,21 +234,20 @@ const Profile = () => {
                     return (
                       <div>
                         <p className="mb-2">
-                          Type <strong>Delete</strong> to confirm account
-                          deletion.
+                          Type <strong>Delete</strong> to confirm
                         </p>
                         <input
                           autoFocus
                           type="text"
                           placeholder="Delete"
-                          className="w-full mb-3 px-3 py-2 rounded border border-gray-300 focus:outline-none"
+                          className="w-full mb-3 px-3 py-2 border rounded"
                           onChange={(e) => {
                             inputValue = e.target.value;
                           }}
                         />
                         <div className="flex gap-2">
                           <button
-                            className="px-3 py-1 text-sm rounded bg-red-600 hover:bg-red-700 text-white"
+                            className="px-3 py-1 bg-red-600 text-white rounded"
                             onClick={async () => {
                               if (inputValue !== "Delete") {
                                 toast.error("Please type Delete to confirm");
@@ -291,22 +256,17 @@ const Profile = () => {
                               try {
                                 await authAPI.deleteProfile();
                                 toast.dismiss(t.id);
-                                toast.success("Account deleted");
-                                localStorage.removeItem("token");
-                                localStorage.removeItem("user");
+                                localStorage.clear();
                                 navigate("/");
                               } catch (err) {
-                                const msg =
-                                  err?.response?.data?.message ||
-                                  "Failed to delete account";
-                                toast.error(msg);
+                                toast.error("Failed to delete account");
                               }
                             }}
                           >
                             Confirm Delete
                           </button>
                           <button
-                            className="px-3 py-1 text-sm rounded bg-gray-200 hover:bg-gray-300 text-gray-800"
+                            className="px-3 py-1 bg-gray-300 rounded"
                             onClick={() => toast.dismiss(t.id)}
                           >
                             Cancel
@@ -319,20 +279,11 @@ const Profile = () => {
               >
                 Delete Account
               </button>
-              {borrowingStatus &&
-                (borrowingStatus.totalBorrowed > 0 ||
-                  borrowingStatus.totalReserved > 0) && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                    You cannot delete your account while you have active borrows
-                    or reservations. Please return all books and cancel
-                    reservations first.
-                  </p>
-                )}
             </div>
           </div>
         )}
 
-        {/* Payment History Section */}
+        {/* Payment History */}
         {!loading && !error && (
           <div className="mt-6">
             <PaymentHistory />
@@ -342,7 +293,7 @@ const Profile = () => {
         <Footer />
       </main>
 
-      {/* Payment Modal */}
+      {/* Subscription Modal */}
       <PaymentModal
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}

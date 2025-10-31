@@ -60,6 +60,7 @@ const quickActions = [
     color: "bg-purple-500 hover:bg-purple-600",
   },
 ];
+// Example chart data
 
 const AdminDashboardModern = () => {
   const { isDark } = useTheme();
@@ -92,6 +93,7 @@ const AdminDashboardModern = () => {
           ? await usersAPI.getAllUsersSuperAdmin()
           : await usersAPI.getAllUsersAdminView();
         setUsers(usersRes.data || []);
+        // console.log(users);
         anySuccess = true;
       } catch (_) {
         // ignore 403/401 and continue
@@ -137,34 +139,36 @@ const AdminDashboardModern = () => {
     );
     const borrowedCopies = totalCopies - availableCopies;
     const activeUsers = users.length;
-    const pendingReservations = borrows.filter((b) => b.status === "reserved").length;
+    const pendingReservations = borrows.filter(
+      (b) => b.status === "reserved"
+    ).length;
 
     return [
       {
         title: "Total Books",
         value: String(totalBooks),
-        icon: <FaBook className="text-blue-500" />,
+        icon: <FaBook className="text-blue-250" />,
         description: "Books in catalog",
         bgColor: "bg-gradient-to-br from-blue-500 to-blue-600",
       },
       {
         title: "Active Users",
         value: String(activeUsers),
-        icon: <FaUsers className="text-green-500" />,
+        icon: <FaUsers className="text-green-250" />,
         description: "Registered users",
         bgColor: "bg-gradient-to-br from-green-500 to-green-600",
       },
       {
         title: "Borrowed Copies",
         value: String(borrowedCopies),
-        icon: <FaClipboardList className="text-yellow-500" />,
+        icon: <FaClipboardList className="text-yellow-250" />,
         description: "Currently on loan",
         bgColor: "bg-gradient-to-br from-yellow-500 to-yellow-600",
       },
       {
         title: "Pending Reservations",
         value: String(pendingReservations),
-        icon: <FaUsers className="text-purple-500" />,
+        icon: <FaUsers className="text-purple-250" />,
         description: "Awaiting confirmation",
         bgColor: "bg-gradient-to-br from-purple-500 to-purple-600",
       },
@@ -172,23 +176,59 @@ const AdminDashboardModern = () => {
   }, [books, users, borrows]);
 
   const booksAddedData = useMemo(() => {
-    const months = Array.from({ length: 12 }, (_, i) => ({ month: i, books: 0 }));
-    books.forEach((b) => {
-      const d = new Date(b.createdAt || Date.now());
-      const m = d.getMonth();
-      months[m].books += 1;
-    });
-    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    return months.map((m) => ({ month: monthNames[m.month], books: m.books }));
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    const counts = books.reduce((acc, book) => {
+      const month = new Date(book.createdAt || Date.now()).getMonth();
+      acc[month] = (acc[month] || 0) + 1;
+      return acc;
+    }, Array(12).fill(0));
+
+    return monthNames.map((name, index) => ({
+      month: name,
+      books: counts[index],
+    }));
   }, [books]);
+  // console.log(booksAddedData);
+  const bookAddedData = [
+    { month: "Jan", books: 40 },
+    { month: "Feb", books: 55 },
+    { month: "Mar", books: 32 },
+    { month: "Apr", books: 60 },
+    { month: "May", books: 48 },
+    { month: "Jun", books: 70 },
+  ];
 
   const recentActivities = useMemo(() => {
     return recent.map((r) => ({
-      type: r.status === "borrowed" ? "Borrow" : r.status === "returned" ? "Return" : "Reservation",
+      type:
+        r.status === "borrowed"
+          ? "Borrow"
+          : r.status === "returned"
+          ? "Return"
+          : "Reservation",
       detail: `${r.user} • ${r.book}`,
       user: r.user,
       date: new Date(r.date).toLocaleDateString(),
-      status: r.status === "borrowed" ? "Borrowed" : r.status === "returned" ? "Returned" : "Reserved",
+      status:
+        r.status === "borrowed"
+          ? "Borrowed"
+          : r.status === "returned"
+          ? "Returned"
+          : "Reserved",
       icon:
         r.status === "borrowed" ? (
           <FaClock className="text-yellow-500" />
@@ -247,7 +287,9 @@ const AdminDashboardModern = () => {
             Welcome to ASTUMSJ Library Admin Dashboard
           </h1>
           <p
-            className={`text-base ${isDark ? "text-gray-300" : "text-gray-600"}`}
+            className={`text-base ${
+              isDark ? "text-gray-300" : "text-gray-600"
+            }`}
           >
             Manage your library system with ease and efficiency
           </p>
@@ -255,10 +297,14 @@ const AdminDashboardModern = () => {
 
         {/* Loading / Error */}
         {loading && (
-          <div className={`mb-8 ${isDark ? "text-gray-300" : "text-gray-600"}`}>Loading dashboard...</div>
+          <div className={`mb-8 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+            Loading dashboard...
+          </div>
         )}
         {error && (
-          <div className={`mb-8 ${isDark ? "text-red-300" : "text-red-600"}`}>{error}</div>
+          <div className={`mb-8 ${isDark ? "text-red-300" : "text-red-600"}`}>
+            {error}
+          </div>
         )}
 
         {/* Quick Actions */}
@@ -267,7 +313,7 @@ const AdminDashboardModern = () => {
           <div className="h-full">
             <CarouselControl />
           </div>
-          
+
           {/* Right Side - Stacked Cards */}
           <div className="space-y-4">
             {quickActions.map((action, index) => (
@@ -282,7 +328,9 @@ const AdminDashboardModern = () => {
               >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <div className={`p-2 rounded-lg ${action.color} text-white`}>
+                    <div
+                      className={`p-2 rounded-lg ${action.color} text-white`}
+                    >
                       {action.icon}
                     </div>
                     <FaArrowRight className="text-gray-400" />
@@ -314,9 +362,12 @@ const AdminDashboardModern = () => {
               key={stat.title}
               onClick={() => {
                 if (stat.title === "Total Books") navigate("/admin/books");
-                else if (stat.title === "Active Users") navigate("/admin/users");
-                else if (stat.title === "Borrowed Copies") navigate("/admin/orders");
-                else if (stat.title === "Pending Reservations") navigate("/admin/orders");
+                else if (stat.title === "Active Users")
+                  navigate("/admin/users");
+                else if (stat.title === "Borrowed Copies")
+                  navigate("/admin/orders");
+                else if (stat.title === "Pending Reservations")
+                  navigate("/admin/orders");
               }}
               className={`shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer ${
                 isDark ? "bg-gray-800" : "bg-white"
@@ -432,7 +483,13 @@ const AdminDashboardModern = () => {
                   </div>
                 ))}
                 {recentActivities.length === 0 && (
-                  <div className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>No recent activity</div>
+                  <div
+                    className={`text-sm ${
+                      isDark ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    No recent activity
+                  </div>
                 )}
                 {recentActivities.length > 0 && (
                   <div className="flex items-center justify-between pt-2">
@@ -449,11 +506,19 @@ const AdminDashboardModern = () => {
                     >
                       Previous
                     </button>
-                    <span className={`text-xs ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+                    <span
+                      className={`text-xs ${
+                        isDark ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
                       Page {activityPage} of {activityTotalPages}
                     </span>
                     <button
-                      onClick={() => setActivityPage((p) => Math.min(activityTotalPages, p + 1))}
+                      onClick={() =>
+                        setActivityPage((p) =>
+                          Math.min(activityTotalPages, p + 1)
+                        )
+                      }
                       disabled={activityPage === activityTotalPages}
                       className={`px-3 py-1 text-sm rounded ${
                         activityPage === activityTotalPages
