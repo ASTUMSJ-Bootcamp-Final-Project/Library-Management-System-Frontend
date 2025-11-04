@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { FaUser } from "react-icons/fa";
+import { FaUser, FaBell } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.jpg";
 
@@ -11,11 +11,23 @@ const StudentNavbar = () => {
   const student = JSON.parse(data);
 
   // Mock student data
-  const studentData = {
-    name: student.username,
-    email: student.email,
-    notifications: 3,
-  };
+  const [studentData, setStudentData] = useState({
+    name: student?.username || "",
+    email: student?.email || "",
+    notifications: 0,
+  });
+
+  // Mock notification count - in real app, this would come from API
+  useEffect(() => {
+    // Simulate fetching notification count
+    const fetchNotificationCount = async () => {
+      // In real app: const response = await notificationAPI.getUnreadCount();
+      // For now, using mock data
+      setStudentData((prev) => ({ ...prev, notifications: 3 }));
+    };
+
+    fetchNotificationCount();
+  }, []);
 
   return (
     <nav className="w-full sticky top-0 z-50">
@@ -41,6 +53,28 @@ const StudentNavbar = () => {
 
           {/* Right Side */}
           <div className="flex items-center space-x-4">
+            {/* Notifications */}
+            <button
+              onClick={() => navigate("/student/notifications")}
+              className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                isDark ? "hover:bg-gray-700" : "hover:bg-gray-100"
+              }`}
+              aria-label="Notifications"
+            >
+              <FaBell
+                className={`text-lg ${
+                  isDark ? "text-gray-300" : "text-gray-600"
+                }`}
+              />
+              {studentData.notifications > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                  {studentData.notifications > 9
+                    ? "9+"
+                    : studentData.notifications}
+                </span>
+              )}
+            </button>
+
             {/* User Profile */}
             <div className="flex items-center space-x-3">
               <button

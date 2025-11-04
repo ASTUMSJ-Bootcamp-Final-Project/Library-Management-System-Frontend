@@ -292,13 +292,19 @@ const SignUpForm = () => {
           <input type="checkbox" name="terms" id="terms" className="mr-2" />
           <label htmlFor="terms" className="text-gray-700 text-sm">
             I agree to the{" "}
-            <a href="#" className="text-blue-600 font-semibold hover:underline">
+            <Link
+              to="/terms"
+              className="text-blue-600 font-semibold hover:underline"
+            >
               Terms of Service
-            </a>{" "}
+            </Link>{" "}
             and{" "}
-            <a href="#" className="text-blue-600 font-semibold hover:underline">
+            <Link
+              to="/privacy"
+              className="text-blue-600 font-semibold hover:underline"
+            >
               Privacy Policy
-            </a>
+            </Link>
           </label>
         </div>
         <Button

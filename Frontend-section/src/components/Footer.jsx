@@ -1,5 +1,6 @@
 import React from "react";
 import { FaFacebook, FaTwitter, FaTelegram, FaHeadset } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const Footer = () => {
@@ -20,40 +21,56 @@ const Footer = () => {
             Powered by <span className="font-bold text-blue-600">ASTUMSJ</span>
           </span>
         </div>
-        <div className="flex space-x-4">
-          <a
-            href="https://facebook.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-blue-600 transition"
-          >
-            <FaFacebook className="text-xl" />
-          </a>
-          <a
-            href="https://twitter.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-blue-600 transition"
-          >
-            <FaTwitter className="text-xl" />
-          </a>
-          <a
-            href="https://t.me/ASTU_MSJ"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-blue-600 transition"
-          >
-            <FaTelegram className="text-xl" />
-          </a>
-          <a
-            href="https://t.me/ASTUMSJBOT"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-blue-600 transition"
-            title="Support Bot"
-          >
-            <FaHeadset className="text-xl" />
-          </a>
+        <div className="flex flex-col md:flex-row items-center justify-between w-full">
+          <div className="flex space-x-6 mb-4 md:mb-0">
+            <Link
+              to="/terms"
+              className="text-sm hover:text-blue-600 transition-colors"
+            >
+              Terms of Service
+            </Link>
+            <Link
+              to="/privacy"
+              className="text-sm hover:text-blue-600 transition-colors"
+            >
+              Privacy Policy
+            </Link>
+          </div>
+          <div className="flex space-x-4">
+            <a
+              href="https://facebook.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-blue-600 transition"
+            >
+              <FaFacebook className="text-xl" />
+            </a>
+            <a
+              href="https://twitter.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-blue-600 transition"
+            >
+              <FaTwitter className="text-xl" />
+            </a>
+            <a
+              href="https://t.me/ASTU_MSJ"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-blue-600 transition"
+            >
+              <FaTelegram className="text-xl" />
+            </a>
+            <a
+              href="https://t.me/ASTUMSJBOT"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-blue-600 transition"
+              title="Support Bot"
+            >
+              <FaHeadset className="text-xl" />
+            </a>
+          </div>
         </div>
       </div>
     </footer>
