@@ -11,11 +11,14 @@ import ManageBook from "./pages/Admin/ManageBookModern";
 import Bookdetail from "./pages/Admin/Bookdetail";
 // import StudentBookDetail from "./pages/Student/BookDetail";
 import BrowseBooks from "./pages/Student/BrowseBooks";
+import Notifications from "./pages/Student/Notifications";
 import PrivateRoute from "@/routes/PrivateRoute";
 import { Toaster } from "react-hot-toast";
 import StudentProfile from "./pages/Student/Profile";
 import AdminProfile from "./pages/Admin/AdminProfile";
 import { SidebarProvider } from "@/contexts/SidebarContext";
+import Terms from "./pages/Public/Terms";
+import Privacy from "./pages/Public/Privacy";
 
 const App = () => {
   return (
@@ -49,6 +52,8 @@ const App = () => {
           <Route path="/" element={<Auth mode="login" />} />
           <Route path="/signup" element={<Auth mode="signup" />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
 
           {/* Admin Routes */}
           <Route
@@ -130,6 +135,14 @@ const App = () => {
             element={
               <PrivateRoute role="student">
                 <BrowseBooks />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/student/notifications"
+            element={
+              <PrivateRoute role="student">
+                <Notifications />
               </PrivateRoute>
             }
           />

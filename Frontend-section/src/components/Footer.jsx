@@ -1,5 +1,6 @@
 import React from "react";
 import { FaFacebook, FaTwitter, FaTelegram, FaHeadset } from "react-icons/fa";
+
 import { useTheme } from "@/contexts/ThemeContext";
 
 const Footer = () => {
@@ -19,6 +20,21 @@ const Footer = () => {
           <span className="text-sm">
             Powered by <span className="font-bold text-blue-600">ASTUMSJ</span>
           </span>
+          {/* </div>
+        <div className="flex flex-col md:flex-row items-center justify-between w-full"> */}
+          {/* <div className="flex space-x-6 mb-4 md:mb-0">
+            <Link
+              to="/terms"
+              className="text-sm hover:text-blue-600 transition-colors"
+            >
+              Terms of Service
+            </Link>
+            <Link
+              to="/privacy"
+              className="text-sm hover:text-blue-600 transition-colors"
+            >
+              Privacy Policy
+            </Link> */}
         </div>
         <div className="flex space-x-6">
           <a
@@ -38,6 +54,7 @@ const Footer = () => {
           >
             <FaHeadset className="text-xl" />
           </a>
+          {/* </div> */}
         </div>
       </div>
     </footer>

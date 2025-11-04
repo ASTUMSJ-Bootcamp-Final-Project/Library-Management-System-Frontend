@@ -1,11 +1,8 @@
-# TODO: Implement Forgot Password Feature
+# TODO: Update Notifications Page to Use Card Layout
 
 ## Tasks
 
-- [x] Create ForgotPassword.jsx page component with form for email input
-- [x] Add "Forgot Password?" link in InputForm.jsx
-- [x] Add /forgot-password route in App.jsx
-- [x] Style ForgotPassword page to match existing auth pages
-- [x] Implement frontend logic to simulate password reset (show success message)
-- [x] Add navigation back to login from forgot password page
-- [x] Test the flow and ensure consistent UI
+- [x] Import NotificationCard component into Notifications.jsx
+- [x] Replace the current list rendering with NotificationCard components in the notifications list section
+- [x] Adjust the container layout from a divided list to a grid layout suitable for cards (e.g., grid-cols-1 md:grid-cols-2 lg:grid-cols-3)
+- [x] Test the changes to ensure notifications display properly in cards
