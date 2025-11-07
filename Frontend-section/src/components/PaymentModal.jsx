@@ -222,7 +222,14 @@ const PaymentModal = ({ isOpen, onClose }) => {
                 {accountNumber}
               </code>
               <button
-                onClick={() => navigator.clipboard.writeText(accountNumber)}
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(accountNumber);
+                    toast.success("Account number copied successfully!");
+                  } catch (err) {
+                    toast.error("Failed to copy account number");
+                  }
+                }}
                 className={`px-2 py-1 text-xs rounded ${
                   isDark 
                     ? "bg-blue-600 hover:bg-blue-700 text-white" 

@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { MdEmail } from "react-icons/md";
 import { FaBookOpen } from "react-icons/fa";
 import logo from "@/assets/logo.jpg";
+import toast from "react-hot-toast";
+import api from "@/services/api";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -16,11 +18,22 @@ const ForgotPassword = () => {
     setIsLoading(true);
     setError("");
 
-    // Simulate API call delay
-    setTimeout(() => {
+    try {
+      const response = await api.post("/users/forgot-password", { email });
+      
+      // Always show success message for security (don't reveal if email exists)
+      toast.success(
+        response.data.message || "If the email exists, a reset link has been sent"
+      );
+      
       setIsSubmitted(true);
+    } catch (error) {
+      // Even on error, show success to prevent email enumeration
+      toast.success("If the email exists, a reset link has been sent");
+      setIsSubmitted(true);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   if (isSubmitted) {

@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 // Base URL for the backend API
-const API_BASE_URL = 'https://library-management-system-backend-wi5k.onrender.com';
+// Use localhost for local development, or uncomment the line below for production
+const API_BASE_URL = 'http://localhost:4000/api';
+// const API_BASE_URL = 'https://library-management-system-backend-wi5k.onrender.com/api';
 
 // Create axios instance with default config
 const api = axios.create({

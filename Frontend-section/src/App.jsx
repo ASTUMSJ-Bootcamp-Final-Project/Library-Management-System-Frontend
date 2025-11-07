@@ -4,6 +4,7 @@ import AdminDashboard from "./pages/Admin/AdminDashboardModern";
 import StudentDashboard from "./pages/Student/StudentDashboardEnhanced";
 import Auth from "./pages/Auth/Auth";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
+import ResetPassword from "./pages/Auth/ResetPassword";
 import ManageUsers from "./pages/Admin/ManageUsers";
 import AddBook from "./pages/Admin/AddBook";
 import Orders from "./pages/Admin/Orders";
@@ -49,6 +50,7 @@ const App = () => {
           <Route path="/" element={<Auth mode="login" />} />
           <Route path="/signup" element={<Auth mode="signup" />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Admin Routes */}
           <Route

@@ -11,6 +11,8 @@ const ManageUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [promotingUserId, setPromotingUserId] = useState(null);
+  const [demotingUserId, setDemotingUserId] = useState(null);
   const currentUser = useMemo(
     () => JSON.parse(localStorage.getItem("user") || "{}"),
     []
@@ -82,6 +84,7 @@ const ManageUsers = () => {
 
   const handlePromote = async (userId) => {
     try {
+      setPromotingUserId(userId);
       await usersAPI.promoteToAdmin(userId);
       toast.success("User promoted to admin");
       // Reload current page to reflect changes
@@ -90,11 +93,14 @@ const ManageUsers = () => {
       const msg = err?.response?.data?.message || "Failed to promote user";
       setError(msg);
       toast.error(msg);
+    } finally {
+      setPromotingUserId(null);
     }
   };
 
   const handleDemote = async (userId) => {
     try {
+      setDemotingUserId(userId);
       await usersAPI.demoteAdmin(userId);
       toast.success("Admin demoted to user");
       // Reload current page to reflect changes
@@ -103,6 +109,8 @@ const ManageUsers = () => {
       const msg = err?.response?.data?.message || "Failed to demote admin";
       setError(msg);
       toast.error(msg);
+    } finally {
+      setDemotingUserId(null);
     }
   };
 
@@ -200,9 +208,17 @@ const ManageUsers = () => {
                               {canDemote && (
                                 <button
                                   onClick={() => handleDemote(u._id)}
-                                  className="px-3 py-1 text-sm rounded bg-yellow-600 hover:bg-yellow-700 text-white"
+                                  disabled={demotingUserId === u._id}
+                                  className="px-3 py-1 text-sm rounded bg-yellow-600 hover:bg-yellow-700 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
-                                  Demote to User
+                                  {demotingUserId === u._id ? (
+                                    <>
+                                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                                      Demoting...
+                                    </>
+                                  ) : (
+                                    "Demote to User"
+                                  )}
                                 </button>
                               )}
                               {canDelete && (
@@ -293,9 +309,17 @@ const ManageUsers = () => {
                             {canPromote && (
                               <button
                                 onClick={() => handlePromote(u._id)}
-                                className="px-3 py-1 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white"
+                                disabled={promotingUserId === u._id}
+                                className="px-3 py-1 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                               >
-                                Promote to Admin
+                                {promotingUserId === u._id ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                                    Promoting...
+                                  </>
+                                ) : (
+                                  "Promote to Admin"
+                                )}
                               </button>
                             )}
                             {canDelete && (

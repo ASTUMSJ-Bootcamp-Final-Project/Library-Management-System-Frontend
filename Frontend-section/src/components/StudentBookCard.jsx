@@ -47,18 +47,26 @@ const StudentBookCard = ({ book, onBorrow, actionLoading = false, canBorrow = tr
     return "text-green-600 dark:text-green-400 font-semibold";
   };
 
+  const availableCopies = Number(book.availableCopies) || 0;
+  const booksRemaining = Number(borrowingStatus?.booksRemaining ?? 0);
+  const hasOverdue = Boolean(borrowingStatus?.hasOverdueBooks);
+
+  const canJoinQueue =
+    availableCopies === 0 && booksRemaining > 0 && !hasOverdue;
+
   const getBorrowButtonText = () => {
-    if (actionLoading) return "Reserving...";
-    if (!canBorrow) {
-      if (borrowingStatus?.booksRemaining === 0) return "Max Limit (3)";
-      if (book.availableCopies === 0) return "Out of Stock";
+    if (actionLoading) return canJoinQueue ? "Joining..." : "Processing...";
+    if (!canBorrow && !canJoinQueue) {
+      if (booksRemaining === 0) return "Max Limit (3)";
+      if (hasOverdue) return "Resolve Overdue";
       return "Cannot Borrow";
     }
+    if (canJoinQueue) return "Join Queue";
     return "Reserve Book";
   };
 
   const isBorrowDisabled = () => {
-    return actionLoading || !canBorrow || book.availableCopies === 0;
+    return actionLoading || (!canBorrow && !canJoinQueue);
   };
 
   return (

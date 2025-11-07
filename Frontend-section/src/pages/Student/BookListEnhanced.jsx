@@ -102,11 +102,20 @@ const BookListEnhanced = () => {
   const handleBorrowBook = async (bookId) => {
     try {
       setActionLoading((prev) => ({ ...prev, [bookId]: true }));
-      await borrowAPI.requestBorrow(bookId);
+      const response = await borrowAPI.requestBorrow(bookId);
       await fetchBorrowingStatus(); // Refresh borrowing status
-      toast.success(
-        "Book reserved successfully! Please collect it within 24 hours."
-      );
+      
+      // Check if user was added to queue
+      if (response.data?.queuePosition) {
+        toast.success(
+          `Book is currently unavailable. You have been added to the queue at position ${response.data.queuePosition}. You will be notified when the book becomes available.`,
+          { duration: 6000 }
+        );
+      } else {
+        toast.success(
+          "Book reserved successfully! Please collect it within 24 hours."
+        );
+      }
     } catch (err) {
       const errorMessage =
         err.response?.data?.message || "Failed to reserve book";
@@ -254,7 +263,8 @@ const BookListEnhanced = () => {
                 actionLoading={actionLoading[book._id]}
                 canBorrow={
                   borrowingStatus?.booksRemaining > 0 &&
-                  book.availableCopies > 0
+                  book.availableCopies > 0 &&
+                  !borrowingStatus?.hasOverdueBooks
                 }
                 borrowingStatus={borrowingStatus}
               />

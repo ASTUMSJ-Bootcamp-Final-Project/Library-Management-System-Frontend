@@ -84,10 +84,10 @@ const MyBooksEnhanced = () => {
 
   if (error) {
     return (
-      <div className="text-center py-12">
+      <div className={`text-center py-12 ${isDark ? "text-white" : "text-gray-900"}`}>
         <FaExclamationTriangle className="text-4xl text-red-500 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-red-600 mb-2">Error</h3>
-        <p className="text-gray-600">{error}</p>
+        <h3 className={`text-lg font-semibold mb-2 ${isDark ? "text-red-400" : "text-red-600"}`}>Error</h3>
+        <p className={isDark ? "text-gray-300" : "text-gray-600"}>{error}</p>
         <button
           onClick={fetchBorrowingStatus}
           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -98,10 +98,19 @@ const MyBooksEnhanced = () => {
     );
   }
 
+  if (!borrowingStatus) {
+    return (
+      <div className={`text-center py-12 ${isDark ? "text-white" : "text-gray-900"}`}>
+        <p className={isDark ? "text-gray-300" : "text-gray-600"}>No borrowing data available</p>
+      </div>
+    );
+  }
+
   const allBooks = [
     ...(borrowingStatus?.activeBorrows || []),
     ...(borrowingStatus?.activeReservations || []),
     ...(borrowingStatus?.returnRequestedBooks || []),
+    ...(borrowingStatus?.queuedBooks || []),
   ];
 
   return (
@@ -118,13 +127,14 @@ const MyBooksEnhanced = () => {
         <p className={isDark ? "text-gray-300" : "text-gray-600"}>
           {borrowingStatus?.totalBorrowed || 0} borrowed,{" "}
           {borrowingStatus?.totalReserved || 0} reserved,{" "}
+          {borrowingStatus?.totalQueued || 0} in queue,{" "}
           {borrowingStatus?.totalReturnRequested || 0} return requested
         </p>
       </div>
 
       {/* Borrowing Status Summary */}
       {borrowingStatus && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
           <div
             className={`p-4 rounded-lg ${
               isDark ? "bg-gray-700" : "bg-blue-50"
@@ -187,6 +197,36 @@ const MyBooksEnhanced = () => {
 
           <div
             className={`p-4 rounded-lg ${
+              isDark ? "bg-gray-700" : "bg-indigo-50"
+            } border-l-4 border-indigo-500`}
+          >
+            <div className="flex items-center">
+              <FaClock
+                className={`text-2xl ${
+                  isDark ? "text-indigo-400" : "text-indigo-600"
+                } mr-3`}
+              />
+              <div>
+                <div
+                  className={`text-2xl font-bold ${
+                    isDark ? "text-white" : "text-indigo-900"
+                  }`}
+                >
+                  {borrowingStatus.totalQueued || 0}
+                </div>
+                <div
+                  className={`text-sm ${
+                    isDark ? "text-gray-300" : "text-indigo-700"
+                  } text-center`}
+                >
+                  In Queue
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className={`p-4 rounded-lg ${
               isDark ? "bg-gray-700" : "bg-red-50"
             } border-l-4 border-red-500`}
           >
@@ -202,7 +242,7 @@ const MyBooksEnhanced = () => {
                     isDark ? "text-white" : "text-red-900"
                   }`}
                 >
-                  {borrowingStatus.overdueBooks}
+                  {borrowingStatus.overdueBooksCount || 0}
                 </div>
                 <div
                   className={`text-sm ${
@@ -280,56 +320,69 @@ const MyBooksEnhanced = () => {
       {/* Books List */}
       <div className="space-y-4">
         {allBooks.length > 0 ? (
-          allBooks.map((borrow) => {
-            const book = borrow.book;
-            const daysRemaining = borrow.dueDate
-              ? utils.getDaysRemaining(borrow.dueDate)
-              : null;
-            const isOverdue = borrow.dueDate
-              ? utils.isOverdue(borrow.dueDate)
-              : false;
+          allBooks
+            .filter((borrow) => borrow && borrow.book) // Filter out entries with missing book data
+            .map((borrow) => {
+              const book = borrow.book;
+              
+              // Safety check - skip if book is null/undefined
+              if (!book) {
+                return null;
+              }
 
-            return (
-              <div
-                key={borrow._id}
-                className={`rounded-lg p-4 ${
-                  isDark ? "bg-gray-700" : "bg-white"
-                } shadow-md border-l-4 ${
-                  borrow.status === "overdue" || isOverdue
-                    ? "border-red-500"
-                    : borrow.status === "reserved"
-                    ? "border-yellow-500"
-                    : borrow.status === "return_requested"
-                    ? "border-purple-500"
-                    : daysRemaining && daysRemaining <= 3
-                    ? "border-orange-500"
-                    : "border-green-500"
-                }`}
-              >
-                <div className="flex items-start space-x-4">
-                  {/* Book Cover */}
-                  <img
-                    src={utils.getBookCoverUrl(book)}
-                    alt={book.title}
-                    className="w-16 h-24 object-cover rounded-lg shadow-md"
-                  />
+              const daysRemaining = borrow.dueDate
+                ? utils.getDaysRemaining(borrow.dueDate)
+                : null;
+              const isOverdue = borrow.dueDate
+                ? utils.isOverdue(borrow.dueDate)
+                : false;
 
-                  {/* Book Details */}
-                  <div className="flex-1">
-                    <h3
-                      className={`text-lg font-semibold ${
-                        isDark ? "text-white" : "text-gray-900"
-                      } mb-1`}
-                    >
-                      {book.title}
-                    </h3>
-                    <p
-                      className={`text-sm ${
-                        isDark ? "text-gray-300" : "text-gray-600"
-                      } mb-2`}
-                    >
-                      by {book.author}
-                    </p>
+              return (
+                <div
+                  key={borrow._id}
+                  className={`rounded-lg p-4 ${
+                    isDark ? "bg-gray-700" : "bg-white"
+                  } shadow-md border-l-4 ${
+                    borrow.status === "overdue" || isOverdue
+                      ? "border-red-500"
+                      : borrow.status === "reserved"
+                      ? "border-yellow-500"
+                      : borrow.status === "queued"
+                      ? "border-blue-500"
+                      : borrow.status === "return_requested"
+                      ? "border-purple-500"
+                      : daysRemaining && daysRemaining <= 3
+                      ? "border-orange-500"
+                      : "border-green-500"
+                  }`}
+                >
+                  <div className="flex items-start space-x-4">
+                    {/* Book Cover */}
+                    <img
+                      src={book ? utils.getBookCoverUrl(book) : '/src/assets/lib11.jpg'}
+                      alt={book?.title || 'Book'}
+                      className="w-16 h-24 object-cover rounded-lg shadow-md"
+                      onError={(e) => {
+                        e.target.src = '/src/assets/lib11.jpg';
+                      }}
+                    />
+
+                    {/* Book Details */}
+                    <div className="flex-1">
+                      <h3
+                        className={`text-lg font-semibold ${
+                          isDark ? "text-white" : "text-gray-900"
+                        } mb-1`}
+                      >
+                        {book?.title || 'Unknown Book'}
+                      </h3>
+                      <p
+                        className={`text-sm ${
+                          isDark ? "text-gray-300" : "text-gray-600"
+                        } mb-2`}
+                      >
+                        by {book?.author || 'Unknown Author'}
+                      </p>
 
                     {/* Status Badge */}
                     <div className="mb-3">
@@ -416,7 +469,7 @@ const MyBooksEnhanced = () => {
 
                     {/* Actions */}
                     <div className="flex space-x-2">
-                      {borrow.status === "borrowed" && (
+                      {(borrow.status === "borrowed" || borrow.status === "overdue") && (
                         <button
                           onClick={() => handleReturnBook(borrow._id)}
                           disabled={actionLoading[borrow._id]}
@@ -431,6 +484,8 @@ const MyBooksEnhanced = () => {
                           <FaUndo className="inline mr-1" />
                           {actionLoading[borrow._id]
                             ? "Submitting..."
+                            : borrow.status === "overdue"
+                            ? "Return Overdue Book"
                             : "Request Return"}
                         </button>
                       )}
@@ -457,6 +512,12 @@ const MyBooksEnhanced = () => {
                               : "Cancel"}
                           </button>
                         </>
+                      )}
+                      {borrow.status === "queued" && (
+                        <span className="px-3 py-1 rounded-lg text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                          <FaClock className="inline mr-1" />
+                          In Queue - Position {borrow.queuePosition || 'N/A'}
+                        </span>
                       )}
                       {borrow.status === "return_requested" && (
                         <span className="px-3 py-1 rounded-lg text-sm font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
