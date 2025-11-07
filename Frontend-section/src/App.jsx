@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Route, Routes } from "react-router-dom";
 import AdminDashboard from "./pages/Admin/AdminDashboardModern";
 import StudentDashboard from "./pages/Student/StudentDashboardEnhanced";
@@ -19,8 +19,21 @@ import AdminProfile from "./pages/Admin/AdminProfile";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import Terms from "./pages/Public/Terms";
 import Privacy from "./pages/Public/Privacy";
+import { connectSocket, disconnectSocket } from "@/services/socket";
 
 const App = () => {
+  // Connect socket when user is logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      connectSocket();
+    }
+
+    return () => {
+      disconnectSocket();
+    };
+  }, []);
+
   return (
     <SidebarProvider>
       <div>

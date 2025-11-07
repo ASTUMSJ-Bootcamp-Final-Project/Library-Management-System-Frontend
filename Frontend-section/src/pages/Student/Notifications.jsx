@@ -17,6 +17,41 @@ import {
   FaFilter,
 } from "react-icons/fa";
 import logo from "@/assets/logo.jpg";
+import { connectSocket, disconnectSocket, on, off } from "@/services/socket";
+import toast from "react-hot-toast";
+import { notificationAPI } from "@/services/api";
+
+// Helper to map backend notification type to UI format
+const mapNotificationType = (backendType) => {
+  const typeMap = {
+    reservation_created: "borrowing",
+    borrow_confirmed: "borrowing",
+    return_requested: "borrowing",
+    return_confirmed: "borrowing",
+    reservation_cancelled: "borrowing",
+    payment_submitted: "payment",
+    payment_approved: "payment",
+    payment_rejected: "payment",
+  };
+  return typeMap[backendType] || "system";
+};
+
+// Helper to get priority based on notification type
+const getPriority = (type) => {
+  if (type.includes("overdue") || type.includes("rejected")) return "high";
+  if (type.includes("approved") || type.includes("confirmed")) return "low";
+  if (type.includes("submitted") || type.includes("requested")) return "medium";
+  return "medium";
+};
+
+// Helper to get icon based on notification type
+const getIcon = (type) => {
+  if (type.includes("payment")) return <FaCreditCard className="text-green-500" />;
+  if (type.includes("borrow") || type.includes("reservation")) return <FaBook className="text-blue-500" />;
+  if (type.includes("return")) return <FaCheckCircle className="text-green-500" />;
+  if (type.includes("overdue")) return <FaExclamationTriangle className="text-red-500" />;
+  return <FaInfoCircle className="text-purple-500" />;
+};
 
 const Notifications = () => {
   const { isDark } = useTheme();
@@ -24,102 +59,130 @@ const Notifications = () => {
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
 
-  // Mock notifications data - in real app, this would come from API
-  const mockNotifications = [
-    {
-      id: 1,
-      type: "borrowing",
-      title: "Book Due Soon",
-      message:
-        'Your borrowed book "Introduction to Algorithms" is due in 2 days.',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      read: false,
-      priority: "high",
-      icon: <FaBook className="text-blue-500" />,
-    },
-    {
-      id: 2,
-      type: "payment",
-      title: "Payment Successful",
-      message:
-        "Your membership renewal payment of $25.00 has been processed successfully.",
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-      read: true,
-      priority: "medium",
-      icon: <FaCreditCard className="text-green-500" />,
-    },
-    {
-      id: 3,
-      type: "borrowing",
-      title: "Book Returned",
-      message:
-        'You have successfully returned "Data Structures and Algorithms".',
-      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-      read: true,
-      priority: "low",
-      icon: <FaCheckCircle className="text-green-500" />,
-    },
-    {
-      id: 4,
-      type: "system",
-      title: "Library Hours Update",
-      message:
-        "Library hours have been extended. Now open until 10 PM on weekdays.",
-      timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-      read: false,
-      priority: "medium",
-      icon: <FaInfoCircle className="text-purple-500" />,
-    },
-    {
-      id: 5,
-      type: "borrowing",
-      title: "Overdue Notice",
-      message:
-        'Your book "Machine Learning Basics" is now overdue. Please return it immediately.',
-      timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-      read: false,
-      priority: "high",
-      icon: <FaExclamationTriangle className="text-red-500" />,
-    },
-    {
-      id: 6,
-      type: "payment",
-      title: "Payment Reminder",
-      message:
-        "Your membership expires in 5 days. Renew now to avoid service interruption.",
-      timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
-      read: true,
-      priority: "high",
-      icon: <FaCalendarAlt className="text-orange-500" />,
-    },
-  ];
-
+  // Load notifications from API on mount
   useEffect(() => {
-    // Simulate API call
     const fetchNotifications = async () => {
-      setLoading(true);
-      // In real app: const response = await notificationAPI.getNotifications();
-      setTimeout(() => {
-        setNotifications(mockNotifications);
+      try {
+        setLoading(true);
+        const response = await notificationAPI.getMyNotifications(1, 50, filter);
+        const fetchedNotifications = response.data.notifications.map((n) => ({
+          id: n._id,
+          type: mapNotificationType(n.type),
+          title: n.title,
+          message: n.message,
+          timestamp: new Date(n.createdAt),
+          read: n.read,
+          priority: n.priority,
+          icon: getIcon(n.type),
+          backendType: n.type,
+          data: n.data || {},
+        }));
+        setNotifications(fetchedNotifications);
+      } catch (error) {
+        console.error("Error loading notifications:", error);
+        toast.error("Failed to load notifications");
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     };
 
     fetchNotifications();
+  }, [filter]);
+
+  // Connect to Socket.IO and listen for notifications
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const socket = connectSocket();
+    if (!socket) return;
+
+    const handleNotification = async (payload) => {
+      console.log("📩 Notification received:", payload);
+      
+      // Map backend notification to UI format
+      const newNotification = {
+        id: Date.now() + Math.random(), // Unique ID
+        type: mapNotificationType(payload.type),
+        title: payload.title || "Notification",
+        message: payload.message || "You have a new notification.",
+        timestamp: new Date(),
+        read: false,
+        priority: getPriority(payload.type),
+        icon: getIcon(payload.type),
+        backendType: payload.type,
+        data: payload.data || {},
+      };
+
+      // Show toast notification
+      toast.success(`${payload.title}: ${payload.message}`, {
+        duration: 5000,
+      });
+
+      // Refresh notifications from API to get the saved one with proper ID
+      // This ensures we have the MongoDB _id and all correct data
+      try {
+        const response = await notificationAPI.getMyNotifications(1, 50, "all");
+        const fetchedNotifications = response.data.notifications.map((n) => ({
+          id: n._id,
+          type: mapNotificationType(n.type),
+          title: n.title,
+          message: n.message,
+          timestamp: new Date(n.createdAt),
+          read: n.read,
+          priority: n.priority,
+          icon: getIcon(n.type),
+          backendType: n.type,
+          data: n.data || {},
+        }));
+        setNotifications(fetchedNotifications);
+      } catch (error) {
+        console.error("Error refreshing notifications:", error);
+        // Fallback: add to state if API refresh fails
+        setNotifications((prev) => [newNotification, ...prev]);
+      }
+    };
+
+    // Listen for notifications
+    on("notification", handleNotification);
+
+    return () => {
+      off("notification", handleNotification);
+    };
   }, []);
 
-  const markAsRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((notif) => (notif.id === id ? { ...notif, read: true } : notif))
-    );
+  const markAsRead = async (id) => {
+    try {
+      await notificationAPI.markAsRead(id);
+      setNotifications((prev) =>
+        prev.map((notif) => (notif.id === id ? { ...notif, read: true } : notif))
+      );
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      toast.error("Failed to mark notification as read");
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
+  const markAllAsRead = async () => {
+    try {
+      await notificationAPI.markAllAsRead();
+      setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
+      toast.success("All notifications marked as read");
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+      toast.error("Failed to mark all notifications as read");
+    }
   };
 
-  const deleteNotification = (id) => {
-    setNotifications((prev) => prev.filter((notif) => notif.id !== id));
+  const deleteNotification = async (id) => {
+    try {
+      await notificationAPI.deleteNotification(id);
+      setNotifications((prev) => prev.filter((notif) => notif.id !== id));
+      toast.success("Notification deleted");
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      toast.error("Failed to delete notification");
+    }
   };
 
   const filteredNotifications = notifications.filter((notif) => {

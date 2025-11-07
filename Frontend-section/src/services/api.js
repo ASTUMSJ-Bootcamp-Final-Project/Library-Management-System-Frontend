@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 // Base URL for the backend API
-const API_BASE_URL = 'https://library-management-system-backend-wi5k.onrender.com';
+const API_BASE_URL = 'http://localhost:5000/api';
+// const API_BASE_URL = 'https://library-management-system-backend-wi5k.onrender.com';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -223,6 +224,25 @@ export const reminderAPI = {
   triggerExpiredReservationCleanup: () => api.post('/reminders/trigger/cleanup'),
   startScheduler: () => api.post('/reminders/start'),
   stopScheduler: () => api.post('/reminders/stop'),
+};
+
+// Notification API
+export const notificationAPI = {
+  // Get user's notifications
+  getMyNotifications: (page = 1, limit = 20, filter = "all") =>
+    api.get(`/notifications?page=${page}&limit=${limit}&filter=${filter}`),
+  
+  // Get unread count
+  getUnreadCount: () => api.get('/notifications/unread-count'),
+  
+  // Mark notification as read
+  markAsRead: (notificationId) => api.put(`/notifications/${notificationId}/read`),
+  
+  // Mark all as read
+  markAllAsRead: () => api.put('/notifications/mark-all-read'),
+  
+  // Delete notification
+  deleteNotification: (notificationId) => api.delete(`/notifications/${notificationId}`),
 };
 
 // Utility functions
