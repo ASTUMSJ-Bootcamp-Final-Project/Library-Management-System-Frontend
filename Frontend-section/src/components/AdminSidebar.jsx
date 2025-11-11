@@ -11,6 +11,7 @@ import {
   FaSignOutAlt,
   FaUser,
   FaChevronLeft,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -23,6 +24,7 @@ const menuItems = [
   { name: "Books", icon: <FaBook />, link: "/admin/books" },
   { name: "Add Book", icon: <FaPlusSquare />, link: "/admin/add-book" },
   { name: "Orders", icon: <FaReceipt />, link: "/admin/orders" },
+  { name: "Fines", icon: <FaExclamationTriangle />, link: "/admin/fines" },
   { name: "Users", icon: <FaUsers />, link: "/admin/users" },
   { name: "Profile", icon: <FaUser />, link: "/admin/profile" },
   // { name: "Settings", icon: <FaCog />, link: "/admin/settings" },

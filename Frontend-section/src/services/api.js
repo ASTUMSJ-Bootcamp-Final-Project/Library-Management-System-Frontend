@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base URL for the backend API
-const API_BASE_URL = 'https://library-management-system-backend-wi5k.onrender.com';
+const API_BASE_URL = 'http://localhost:4000/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -182,6 +182,54 @@ export const paymentAPI = {
   rejectPayment: (paymentId, reason) => api.post(`/payments/${paymentId}/reject`, { reason }),
 };
 
+// Fine API
+export const fineAPI = {
+  // Get user's outstanding fines
+  getMyFines: (page = 1, limit = 10) => api.get(`/fines/my-fines?page=${page}&limit=${limit}`),
+
+  // Admin: Get all fines
+  getAllFines: (page = 1, limit = 10) => api.get(`/fines?page=${page}&limit=${limit}`),
+
+  // Submit fine payment with proof, bank account number, and copy number
+  submitFinePayment: ({ fineIds, paymentProof, bankAccountNumber, copyNumber }) => {
+    const formData = new FormData();
+
+    // fineIds can be parsed by backend as JSON string or repeated field
+    if (Array.isArray(fineIds)) {
+      formData.append('fineIds', JSON.stringify(fineIds));
+      fineIds.forEach((id) => {
+        if (id) formData.append('fineIds', id);
+      });
+    } else if (fineIds) {
+      formData.append('fineIds', JSON.stringify([fineIds]));
+      formData.append('fineIds', fineIds);
+    }
+
+    formData.append('bankAccountNumber', bankAccountNumber);
+    formData.append('copyNumber', copyNumber);
+
+    if (paymentProof) {
+      formData.append('paymentProof', paymentProof);
+    }
+
+    return api.post('/fines/submit-payment', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  // Get user's fine payment history
+  getMyFinePayments: (page = 1, limit = 10) => api.get(`/fines/my-payments?page=${page}&limit=${limit}`),
+
+  // Admin: Get all fine payments
+  getAllFinePayments: (page = 1, limit = 10) => api.get(`/fines/payments?page=${page}&limit=${limit}`),
+
+  // Admin: Approve fine payment
+  approveFinePayment: (paymentId) => api.post(`/fines/payments/${paymentId}/approve`),
+
+  // Admin: Reject fine payment with reason
+  rejectFinePayment: (paymentId, reason) => api.post(`/fines/payments/${paymentId}/reject`, { reason }),
+};
+
 // Events API
 export const eventsAPI = {
   list: () => api.get('/events'),
@@ -300,6 +348,8 @@ export const utils = {
         return "Overdue";
       case "reserved":
         return "Reserved";
+      case "queued":
+        return "Queued";
       case "return_requested":
         return "Return Requested";
       case "expired":
@@ -320,6 +370,8 @@ export const utils = {
         return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
       case "reserved":
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      case "queued":
+        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
       case "return_requested":
         return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
       case "expired":

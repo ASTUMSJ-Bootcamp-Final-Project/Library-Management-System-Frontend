@@ -9,6 +9,7 @@ import {
   FaHistory,
   FaChevronLeft,
   FaBell,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -21,6 +22,7 @@ const menuItems = [
   { name: "Browse Books", icon: <FaBook />, link: "/student/browse-books" },
   //   { name: "My Books", icon: <FaHistory />, link: "/student/my-books" },
   { name: "Notifications", icon: <FaBell />, link: "/student/notifications" },
+  { name: "My Fines", icon: <FaExclamationTriangle />, link: "/student/fines" },
   { name: "Profile", icon: <FaUser />, link: "/student/profile" },
 ];
 

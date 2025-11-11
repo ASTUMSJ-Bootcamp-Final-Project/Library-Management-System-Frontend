@@ -16,6 +16,8 @@ import PrivateRoute from "@/routes/PrivateRoute";
 import { Toaster } from "react-hot-toast";
 import StudentProfile from "./pages/Student/Profile";
 import AdminProfile from "./pages/Admin/AdminProfile";
+import MyFines from "./pages/Student/MyFines";
+import ManageFines from "./pages/Admin/ManageFines";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import Terms from "./pages/Public/Terms";
 import Privacy from "./pages/Public/Privacy";
@@ -112,6 +114,14 @@ const App = () => {
               </PrivateRoute>
             }
           />
+          <Route
+            path="/admin/fines"
+            element={
+              <PrivateRoute role="admin">
+                <ManageFines />
+              </PrivateRoute>
+            }
+          />
 
           {/* Student Routes */}
           <Route
@@ -151,6 +161,14 @@ const App = () => {
             element={
               <PrivateRoute role="student">
                 <StudentProfile />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/student/fines"
+            element={
+              <PrivateRoute role="student">
+                <MyFines />
               </PrivateRoute>
             }
           />

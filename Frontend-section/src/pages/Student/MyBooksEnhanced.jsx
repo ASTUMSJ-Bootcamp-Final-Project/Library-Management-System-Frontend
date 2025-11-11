@@ -102,6 +102,7 @@ const MyBooksEnhanced = () => {
     ...(borrowingStatus?.activeBorrows || []),
     ...(borrowingStatus?.activeReservations || []),
     ...(borrowingStatus?.returnRequestedBooks || []),
+    ...(borrowingStatus?.queuedBooks || []),
   ];
 
   return (
@@ -118,13 +119,14 @@ const MyBooksEnhanced = () => {
         <p className={isDark ? "text-gray-300" : "text-gray-600"}>
           {borrowingStatus?.totalBorrowed || 0} borrowed,{" "}
           {borrowingStatus?.totalReserved || 0} reserved,{" "}
-          {borrowingStatus?.totalReturnRequested || 0} return requested
+          {borrowingStatus?.totalReturnRequested || 0} return requested,{" "}
+          {borrowingStatus?.totalQueued || 0} in queue
         </p>
       </div>
 
       {/* Borrowing Status Summary */}
       {borrowingStatus && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
           <div
             className={`p-4 rounded-lg ${
               isDark ? "bg-gray-700" : "bg-blue-50"
@@ -274,6 +276,35 @@ const MyBooksEnhanced = () => {
               </div>
             </div>
           </div>
+          <div
+            className={`p-4 rounded-lg ${
+              isDark ? "bg-gray-700" : "bg-orange-50"
+            } border-l-4 border-orange-500`}
+          >
+            <div className="flex items-center">
+              <FaClock
+                className={`text-2xl ${
+                  isDark ? "text-orange-400" : "text-orange-600"
+                } mr-3`}
+              />
+              <div>
+                <div
+                  className={`text-2xl font-bold ${
+                    isDark ? "text-white" : "text-orange-900"
+                  }`}
+                >
+                  {borrowingStatus.totalQueued || 0}
+                </div>
+                <div
+                  className={`text-sm ${
+                    isDark ? "text-gray-300" : "text-orange-700"
+                  } text-center`}
+                >
+                  In Queue
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -299,6 +330,8 @@ const MyBooksEnhanced = () => {
                     ? "border-red-500"
                     : borrow.status === "reserved"
                     ? "border-yellow-500"
+                    : borrow.status === "queued"
+                    ? "border-orange-500"
                     : borrow.status === "return_requested"
                     ? "border-purple-500"
                     : daysRemaining && daysRemaining <= 3
@@ -339,6 +372,7 @@ const MyBooksEnhanced = () => {
                         )}`}
                       >
                         {utils.getStatusText(borrow.status)}
+                        {borrow.queuePosition && ` (Position #${borrow.queuePosition})`}
                       </span>
                     </div>
 
@@ -393,6 +427,22 @@ const MyBooksEnhanced = () => {
                           </span>
                         </div>
                       )}
+                      {borrow.holdUntil && (
+                        <div className="flex items-center space-x-2">
+                          <FaClock
+                            className={
+                              isDark ? "text-green-400" : "text-green-600"
+                            }
+                          />
+                          <span
+                            className={`text-sm ${
+                              isDark ? "text-gray-300" : "text-gray-600"
+                            }`}
+                          >
+                            Hold Until: {utils.formatDateTime(borrow.holdUntil)}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Days Remaining or Overdue */}
@@ -438,7 +488,9 @@ const MyBooksEnhanced = () => {
                         <>
                           <span className="px-3 py-1 rounded-lg text-sm font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
                             <FaClock className="inline mr-1" />
-                            Awaiting Collection
+                            {borrow.holdUntil
+                              ? "Available - Collect within 48 hours"
+                              : "Awaiting Collection"}
                           </span>
                           <button
                             onClick={() => handleCancelReservation(borrow._id)}

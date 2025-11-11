@@ -49,16 +49,28 @@ const StudentBookCard = ({ book, onBorrow, actionLoading = false, canBorrow = tr
 
   const getBorrowButtonText = () => {
     if (actionLoading) return "Reserving...";
+    const hasOverdue = !!borrowingStatus?.hasOverdueBooks;
+    const available = Number(book.availableCopies) > 0;
     if (!canBorrow) {
       if (borrowingStatus?.booksRemaining === 0) return "Max Limit (3)";
-      if (book.availableCopies === 0) return "Out of Stock";
-      return "Cannot Borrow";
+      if (!available && !hasOverdue) return "Join Queue";
+      return hasOverdue ? "Return Overdue Books" : "Cannot Borrow";
     }
+    if (!available) return "Join Queue";
     return "Reserve Book";
   };
 
   const isBorrowDisabled = () => {
-    return actionLoading || !canBorrow || book.availableCopies === 0;
+    const hasOverdue = !!borrowingStatus?.hasOverdueBooks;
+    const available = Number(book.availableCopies) > 0;
+    // Disable when:
+    // - loading
+    // - if available: user can't borrow
+    // - if unavailable: user has overdue (cannot join queue)
+    return (
+      actionLoading ||
+      (available ? !canBorrow : hasOverdue)
+    );
   };
 
   return (
